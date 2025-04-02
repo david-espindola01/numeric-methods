@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, request
 import numpy as np
+from fractions import Fraction
 
 app = Flask(__name__)
 
@@ -12,12 +13,16 @@ def gauss_seidel_solve():
         return jsonify({"error": "Datos incompletos. Se requieren 'A' y 'b'"}), 400
 
     try:
-        A = np.array(data['A'], dtype=float)
-        b = np.array(data['b'], dtype=float)
-        tolerance = float(data.get('tolerance', 1e-6))
+        # Convertimos la matriz A y el vector b en fracciones
+        A = np.array([[Fraction(str(value)) for value in row] for row in data['A']])
+        b = np.array([Fraction(str(value)) for value in data['b']])
+
+        tolerance = Fraction(str(data.get('tolerance', '1e-6')))
         max_iterations = int(data.get('max_iterations', 100))
 
         solution, iterations = gauss_seidel(A, b, tolerance, max_iterations)
+        # Convertimos la solución a flotantes para la respuesta JSON
+        solution = [float(x) for x in solution]
         return jsonify({"method": "Gauss-Seidel", "solution": solution, "iterations": iterations})
     
     except Exception as e:
@@ -29,7 +34,7 @@ def health_check():
 
 def gauss_seidel(A, b, tolerance, max_iterations):
     n = len(A)
-    x = np.zeros(n)
+    x = np.zeros(n, dtype=object)  # Usamos dtype=object para trabajar con Fraction
 
     for iteration in range(max_iterations):
         x_old = x.copy()
@@ -38,10 +43,11 @@ def gauss_seidel(A, b, tolerance, max_iterations):
             s = sum(A[i][j] * x[j] for j in range(n) if j != i)
             x[i] = (b[i] - s) / A[i][i]
 
-        if np.allclose(x, x_old, atol=tolerance):
-            return x.tolist(), iteration + 1
+        # Verificamos la tolerancia usando valores absolutos de Fraction
+        if all(abs(x[i] - x_old[i]) <= tolerance for i in range(n)):
+            return x, iteration + 1
 
-    return x.tolist(), max_iterations
+    return x, max_iterations
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5007, debug=True)
