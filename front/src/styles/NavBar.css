@@ -1,0 +1,39 @@
+nav {
+    background-color: #d63384;
+    padding: 0.2rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+}
+  
+nav ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+}
+  
+nav ul li {
+    margin: 0;
+}
+  
+nav ul li a {
+    display: block;
+    padding: 1rem 1.25rem;
+    text-decoration: none;
+    color: #f8f9fa;
+    font-weight: 500;
+    border-right: 1px solid rgba(248, 249, 250, 0.2); 
+    transition: all 0.3s ease; 
+}
+  
+nav ul li:last-child a {
+    border-right: none;
+}
+  
+nav ul li a:hover {
+    background-color: #495057;
+    color: #ffffff;
+    transform: translateY(-2px);
+}
