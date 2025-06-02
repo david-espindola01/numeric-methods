@@ -1,0 +1,79 @@
+version: "3.8"
+
+services:
+  bisection:
+    build: ./methods/bisection
+    container_name: bisection
+    ports:
+      - "5001:5001"
+
+  fixed_point:
+    build: ./methods/fixed-point
+    container_name: fixed_point
+    ports:
+      - "5002:5002"
+
+  newton_raphson:
+    build: ./methods/newton-raphson
+    container_name: newton_raphson
+    ports:
+      - "5003:5003"
+
+  secant:
+    build: ./methods/secant
+    container_name: secant
+    ports:
+      - "5004:5004"
+
+  jacobi:
+    build: ./methods/jacobi
+    container_name: jacobi
+    ports:
+      - "5006:5006"
+
+  gauss_seidel:
+    build: ./methods/gauss-seidel
+    container_name: gauss_seidel
+    ports:
+      - "5007:5007"
+
+  euler:
+    build: ./methods/euler
+    container_name: euler
+    ports:
+      - "5008:5008"
+
+  simpson:
+    build: ./methods/simpson
+    container_name: simpson
+    ports:
+      - "5009:5009"
+
+  trapezoid:
+    build: ./methods/trapezoid
+    container_name: trapezoid
+    ports:
+      - "5010:5010"
+
+  romberg:
+    build: ./methods/romberg
+    container_name: romberg
+    ports:
+      - "5011:5011"
+
+  runner:
+    build: ./runner
+    container_name: runner
+    ports:
+      - "5000:5000"
+    depends_on:
+      - bisection
+      - fixed_point
+      - newton_raphson
+      - secant
+      - jacobi
+      - gauss_seidel
+      - euler
+      - simpson
+      - trapezoid
+      - romberg
