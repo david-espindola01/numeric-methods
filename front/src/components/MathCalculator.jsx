@@ -4,11 +4,36 @@ const MathCalculator = ({ onInsert, placeholder = "Insertar función..." }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [currentInput, setCurrentInput] = useState('');
 
+  const functionButtons = [
+    { label: 'sin', value: 'sin(', type: 'function' },
+    { label: 'cos', value: 'cos(', type: 'function' },
+    { label: 'tan', value: 'tan(', type: 'function' },
+    { label: 'log', value: 'log(', type: 'function' },
+    { label: 'ln', value: 'ln(', type: 'function' },
+    { label: '√', value: 'sqrt(', type: 'function' },
+    { label: 'x²', value: '**2', type: 'power' },
+    { label: 'x³', value: '**3', type: 'power' },
+    { label: 'xⁿ', value: '**', type: 'power' },
+    { label: '|x|', value: 'abs(', type: 'function' },
+    { label: 'e', value: 'e', type: 'constant' },
+    { label: 'a/b', value: '/', type: 'operator' },
+    // Variables
+    { label: 'x', value: 'x', type: 'variable' },
+    { label: 'y', value: 'y', type: 'variable' },
+    { label: 'z', value: 'z', type: 'variable' },
+  ];
+
+  const parenthesisButtons = [
+    { label: '(', value: '(', type: 'parenthesis' },
+    { label: ')', value: ')', type: 'parenthesis' },
+    { label: 'π', value: 'pi', type: 'constant' },
+  ];
+
   const mathButtons = [
     { label: '7', value: '7', type: 'number' },
     { label: '8', value: '8', type: 'number' },
     { label: '9', value: '9', type: 'number' },
-    { label: '÷', value: '/', type: 'operator' },
+    { label: 'DEL', value: 'DEL', type: 'control' },
     { label: '4', value: '4', type: 'number' },
     { label: '5', value: '5', type: 'number' },
     { label: '6', value: '6', type: 'number' },
@@ -19,26 +44,15 @@ const MathCalculator = ({ onInsert, placeholder = "Insertar función..." }) => {
     { label: '−', value: '-', type: 'operator' },
     { label: '0', value: '0', type: 'number' },
     { label: '.', value: '.', type: 'number' },
+    // Espacio vacío donde estaba el =
+    { label: '', value: '', type: 'empty' },
     { label: '+', value: '+', type: 'operator' },
   ];
 
-  const functionButtons = [
-    { label: 'sin', value: 'sin(', type: 'function' },
-    { label: 'cos', value: 'cos(', type: 'function' },
-    { label: 'tan', value: 'tan(', type: 'function' },
-    { label: 'ln', value: 'ln(', type: 'function' },
-    { label: 'log', value: 'log(', type: 'function' },
-    { label: 'exp', value: 'exp(', type: 'function' },
-    { label: 'sqrt', value: 'sqrt(', type: 'function' },
-    { label: 'abs', value: 'abs(', type: 'function' },
-    { label: 'x', value: 'x', type: 'variable' },
-    { label: 'x²', value: '**2', type: 'power' },
-    { label: 'x³', value: '**3', type: 'power' },
-    { label: 'xⁿ', value: '**', type: 'power' },
-    { label: '(', value: '(', type: 'parenthesis' },
-    { label: ')', value: ')', type: 'parenthesis' },
-    { label: 'π', value: 'pi', type: 'constant' },
-    { label: 'e', value: 'e', type: 'constant' },
+  const controlButtons = [
+    { label: '←', value: '←', type: 'move', title: 'Mover cursor a la izquierda' },
+    { label: '→', value: '→', type: 'move', title: 'Mover cursor a la derecha' },
+    { label: '⌫', value: '⌫', type: 'delete', title: 'Borrar carácter' },
   ];
 
   const formatPreview = (expression) => {
@@ -57,7 +71,15 @@ const MathCalculator = ({ onInsert, placeholder = "Insertar función..." }) => {
   };
 
   const handleButtonClick = (value) => {
-    setCurrentInput(prev => prev + value);
+    if (value === 'DEL') {
+      handleClear();
+    } else if (value === '⌫') {
+      handleBackspace();
+    } else if (value === '←' || value === '→') {
+      // Implement cursor movement logic here if needed
+    } else if (value) {
+      setCurrentInput(prev => prev + value);
+    }
   };
 
   const handleClear = () => {
@@ -69,9 +91,11 @@ const MathCalculator = ({ onInsert, placeholder = "Insertar función..." }) => {
   };
 
   const handleInsert = () => {
-    onInsert(currentInput);
-    setCurrentInput('');
-    setIsOpen(false);
+    if (currentInput) {
+      onInsert(currentInput);
+      setCurrentInput('');
+      setIsOpen(false);
+    }
   };
 
   const handleToggle = () => {
@@ -81,30 +105,74 @@ const MathCalculator = ({ onInsert, placeholder = "Insertar función..." }) => {
     }
   };
 
+  const getButtonStyle = (type) => {
+    const baseStyle = {
+      padding: '12px 8px',
+      border: 'none',
+      borderRadius: '6px',
+      cursor: 'pointer',
+      fontSize: '16px',
+      fontWeight: '500',
+      transition: 'all 0.2s ease',
+      boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      minWidth: '40px'
+    };
+
+    switch (type) {
+      case 'number':
+        return { ...baseStyle, background: '#f5f5f5', color: '#333' };
+      case 'operator':
+        return { ...baseStyle, background: '#e3f2fd', color: '#1976d2' };
+      case 'function':
+        return { ...baseStyle, background: '#f1f8e9', color: '#689f38' };
+      case 'power':
+        return { ...baseStyle, background: '#fff3e0', color: '#fb8c00' };
+      case 'constant':
+        return { ...baseStyle, background: '#f3e5f5', color: '#8e24aa' };
+      case 'control':
+        return { ...baseStyle, background: '#ffebee', color: '#d32f2f' };
+      case 'move':
+        return { ...baseStyle, background: '#e0e0e0', color: '#616161' };
+      case 'delete':
+        return { ...baseStyle, background: '#ffccbc', color: '#e64a19' };
+      case 'variable':
+        return { ...baseStyle, background: '#e8eaf6', color: '#3949ab' };
+      case 'parenthesis':
+        return { ...baseStyle, background: '#e0f7fa', color: '#00acc1' };
+      case 'empty':
+        return { ...baseStyle, background: 'transparent', boxShadow: 'none', cursor: 'default' };
+      default:
+        return { ...baseStyle, background: '#f5f5f5', color: '#333' };
+    }
+  };
+
   return (
     <div style={{ position: 'relative', width: '100%' }}>
       <button
         type="button"
         onClick={handleToggle}
         style={{
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          background: 'linear-gradient(135deg, #455A64 0%, #263238 100%)',
           color: 'white',
           border: 'none',
           padding: '10px 20px',
-          borderRadius: '8px',
+          borderRadius: '6px',
           cursor: 'pointer',
           fontSize: '14px',
           fontWeight: '500',
-          boxShadow: '0 4px 15px rgba(102, 126, 234, 0.3)',
+          boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
           transition: 'all 0.3s ease',
         }}
         onMouseOver={(e) => {
           e.target.style.transform = 'translateY(-2px)';
-          e.target.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.4)';
+          e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
         }}
         onMouseOut={(e) => {
           e.target.style.transform = 'translateY(0)';
-          e.target.style.boxShadow = '0 4px 15px rgba(102, 126, 234, 0.3)';
+          e.target.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
         }}
       >
         🧮 {placeholder}
@@ -117,13 +185,13 @@ const MathCalculator = ({ onInsert, placeholder = "Insertar función..." }) => {
           left: '0',
           right: '0',
           background: 'white',
-          border: '1px solid #e9ecef',
-          borderRadius: '15px',
-          padding: '25px',
-          boxShadow: '0 15px 50px rgba(0, 0, 0, 0.15)',
+          border: '1px solid #e0e0e0',
+          borderRadius: '12px',
+          padding: '20px',
+          boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)',
           zIndex: 1000,
           width: '95%',
-          maxWidth: '1200px',
+          maxWidth: '800px',
           margin: '0 auto'
         }}>
           {/* Header */}
@@ -131,19 +199,19 @@ const MathCalculator = ({ onInsert, placeholder = "Insertar función..." }) => {
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            marginBottom: '20px',
-            paddingBottom: '15px',
-            borderBottom: '2px solid #f8f9fa'
+            marginBottom: '15px',
+            paddingBottom: '10px',
+            borderBottom: '1px solid #f5f5f5'
           }}>
-            <h4 style={{ margin: 0, color: '#495057', fontSize: '20px' }}>Calculadora Matemática</h4>
+            <h4 style={{ margin: 0, color: '#424242', fontSize: '18px', fontWeight: '500' }}>Calculadora Matemática</h4>
             <button
               onClick={handleToggle}
               style={{
                 background: 'none',
                 border: 'none',
-                fontSize: '24px',
+                fontSize: '20px',
                 cursor: 'pointer',
-                color: '#6c757d'
+                color: '#757575'
               }}
             >
               ×
@@ -152,40 +220,65 @@ const MathCalculator = ({ onInsert, placeholder = "Insertar función..." }) => {
 
           {/* Input Display */}
           <div style={{
-            background: '#f8f9fa',
-            border: '2px solid #e9ecef',
-            borderRadius: '12px',
-            padding: '20px',
-            marginBottom: '20px',
+            background: '#fafafa',
+            border: '1px solid #e0e0e0',
+            borderRadius: '6px',
+            padding: '15px',
+            marginBottom: '15px',
             minHeight: '60px',
-            fontSize: '20px',
+            fontSize: '18px',
             fontFamily: 'Cambria, "Times New Roman", serif',
             display: 'flex',
             alignItems: 'center',
             wordBreak: 'break-all'
           }}>
             <div style={{ width: '100%' }}>
-              <div style={{ fontSize: '14px', color: '#6c757d', marginBottom: '5px' }}>
-                Vista previa matemática:
+              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#212121' }}>
+                {currentInput ? formatPreview(currentInput) : <span style={{ color: '#bdbdbd' }}>Ingresa tu función aquí...</span>}
               </div>
-              <div style={{ fontSize: '24px', fontWeight: 'bold' }}>
-                {currentInput ? formatPreview(currentInput) : <span style={{ color: '#adb5bd' }}>Ingresa tu función aquí...</span>}
-              </div>
-              <div style={{ fontSize: '12px', color: '#6c757d', marginTop: '5px', fontFamily: 'monospace' }}>
-                Código: {currentInput || 'vacío'}
+              <div style={{ fontSize: '12px', color: '#9e9e9e', marginTop: '5px', fontFamily: 'monospace' }}>
+                {currentInput || 'vacío'}
               </div>
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '25px' }}>
-            {/* Function Buttons */}
-            <div>
-              <h5 style={{ margin: '0 0 15px 0', color: '#6c757d', fontSize: '14px', textTransform: 'uppercase', fontWeight: 'bold' }}>
-                Funciones Matemáticas
-              </h5>
+          <div style={{ display: 'flex', gap: '15px' }}>
+            {/* Left Block - Functions */}
+            <div style={{ flex: 1 }}>
+              {/* Control Buttons */}
+              <div style={{
+                display: 'flex',
+                gap: '8px',
+                marginBottom: '10px'
+              }}>
+                {controlButtons.map((btn, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleButtonClick(btn.value)}
+                    title={btn.title}
+                    style={{
+                      ...getButtonStyle(btn.type),
+                      flex: 1,
+                      padding: '10px'
+                    }}
+                    onMouseOver={(e) => {
+                      e.target.style.transform = 'scale(1.05)';
+                      e.target.style.boxShadow = '0 2px 6px rgba(0,0,0,0.15)';
+                    }}
+                    onMouseOut={(e) => {
+                      e.target.style.transform = 'scale(1)';
+                      e.target.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+                    }}
+                  >
+                    {btn.label}
+                  </button>
+                ))}
+              </div>
+              
+              {/* Function Buttons */}
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(5, 1fr)',
+                gridTemplateColumns: 'repeat(3, 1fr)',
                 gap: '8px'
               }}>
                 {functionButtons.map((btn, index) => (
@@ -193,28 +286,16 @@ const MathCalculator = ({ onInsert, placeholder = "Insertar función..." }) => {
                     key={index}
                     onClick={() => handleButtonClick(btn.value)}
                     style={{
-                      padding: '12px 8px',
-                      border: '1px solid #dee2e6',
-                      borderRadius: '8px',
-                      background: btn.type === 'function' ? '#e3f2fd' : 
-                                 btn.type === 'power' ? '#fff3e0' :
-                                 btn.type === 'constant' ? '#f3e5f5' : '#f8f9fa',
-                      cursor: 'pointer',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      transition: 'all 0.2s ease'
+                      ...getButtonStyle(btn.type),
+                      padding: '12px 8px'
                     }}
                     onMouseOver={(e) => {
-                      e.target.style.background = btn.type === 'function' ? '#bbdefb' : 
-                                                 btn.type === 'power' ? '#ffe0b2' :
-                                                 btn.type === 'constant' ? '#e1bee7' : '#e9ecef';
                       e.target.style.transform = 'scale(1.05)';
+                      e.target.style.boxShadow = '0 2px 6px rgba(0,0,0,0.15)';
                     }}
                     onMouseOut={(e) => {
-                      e.target.style.background = btn.type === 'function' ? '#e3f2fd' : 
-                                                 btn.type === 'power' ? '#fff3e0' :
-                                                 btn.type === 'constant' ? '#f3e5f5' : '#f8f9fa';
                       e.target.style.transform = 'scale(1)';
+                      e.target.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
                     }}
                   >
                     {btn.label}
@@ -223,124 +304,108 @@ const MathCalculator = ({ onInsert, placeholder = "Insertar función..." }) => {
               </div>
             </div>
 
-            {/* Number Pad */}
-            <div>
-              <h5 style={{ margin: '0 0 15px 0', color: '#6c757d', fontSize: '14px', textTransform: 'uppercase', fontWeight: 'bold' }}>
-                Números y Operadores
-              </h5>
+            {/* Right Block - Numbers */}
+            <div style={{ flex: 1 }}>
+              {/* Parenthesis row moved up */}
               <div style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(4, 1fr)',
-                gap: '10px'
+                gap: '8px',
+                marginBottom: '8px'
+              }}>
+                {parenthesisButtons.map((btn, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleButtonClick(btn.value)}
+                    style={{
+                      ...getButtonStyle(btn.type),
+                      padding: '12px 8px'
+                    }}
+                    onMouseOver={(e) => {
+                      e.target.style.transform = 'scale(1.05)';
+                      e.target.style.boxShadow = '0 2px 6px rgba(0,0,0,0.15)';
+                    }}
+                    onMouseOut={(e) => {
+                      e.target.style.transform = 'scale(1)';
+                      e.target.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+                    }}
+                  >
+                    {btn.label}
+                  </button>
+                ))}
+                {/* Empty space to maintain grid */}
+                <div style={getButtonStyle('empty')}></div>
+              </div>
+
+              {/* Numbers grid */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(4, 1fr)',
+                gap: '8px'
               }}>
                 {mathButtons.map((btn, index) => (
                   <button
                     key={index}
                     onClick={() => handleButtonClick(btn.value)}
                     style={{
-                      padding: '15px',
-                      border: '1px solid #dee2e6',
-                      borderRadius: '10px',
-                      background: btn.type === 'number' ? '#ffffff' :
-                                 btn.type === 'operator' ? '#e8f5e8' :
-                                 btn.type === 'variable' ? '#fff8e1' : '#f8f9fa',
-                      cursor: 'pointer',
-                      fontSize: '18px',
-                      fontWeight: '700',
-                      transition: 'all 0.2s ease'
+                      ...getButtonStyle(btn.type),
+                      padding: '12px 8px',
+                      visibility: btn.type === 'empty' ? 'hidden' : 'visible'
                     }}
                     onMouseOver={(e) => {
-                      e.target.style.background = btn.type === 'number' ? '#f8f9fa' :
-                                                 btn.type === 'operator' ? '#c8e6c9' :
-                                                 btn.type === 'variable' ? '#ffecb3' : '#e9ecef';
-                      e.target.style.transform = 'scale(1.05)';
+                      if (btn.type !== 'empty') {
+                        e.target.style.transform = 'scale(1.05)';
+                        e.target.style.boxShadow = '0 2px 6px rgba(0,0,0,0.15)';
+                      }
                     }}
                     onMouseOut={(e) => {
-                      e.target.style.background = btn.type === 'number' ? '#ffffff' :
-                                                 btn.type === 'operator' ? '#e8f5e8' :
-                                                 btn.type === 'variable' ? '#fff8e1' : '#f8f9fa';
-                      e.target.style.transform = 'scale(1)';
+                      if (btn.type !== 'empty') {
+                        e.target.style.transform = 'scale(1)';
+                        e.target.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+                      }
                     }}
                   >
                     {btn.label}
                   </button>
                 ))}
               </div>
-            </div>
-          </div>
 
-          {/* Control Buttons */}
-          <div style={{
-            display: 'flex',
-            gap: '15px',
-            justifyContent: 'center',
-            marginTop: '25px'
-          }}>
-            <button
-              onClick={handleClear}
-              style={{
-                flex: 1,
-                maxWidth: '200px',
-                padding: '15px',
-                background: '#dc3545',
-                color: 'white',
-                border: 'none',
-                borderRadius: '10px',
-                cursor: 'pointer',
-                fontWeight: '600',
-                fontSize: '16px',
-                transition: 'background 0.2s ease'
-              }}
-              onMouseOver={(e) => e.target.style.background = '#c82333'}
-              onMouseOut={(e) => e.target.style.background = '#dc3545'}
-            >
-              🗑️ Limpiar
-            </button>
-            <button
-              onClick={handleBackspace}
-              style={{
-                flex: 1,
-                maxWidth: '200px',
-                padding: '15px',
-                background: '#ffc107',
-                color: '#212529',
-                border: 'none',
-                borderRadius: '10px',
-                cursor: 'pointer',
-                fontWeight: '600',
-                fontSize: '16px',
-                transition: 'background 0.2s ease'
-              }}
-              onMouseOver={(e) => e.target.style.background = '#e0a800'}
-              onMouseOut={(e) => e.target.style.background = '#ffc107'}
-            >
-              ⌫ Borrar
-            </button>
-            <button
-              onClick={handleInsert}
-              disabled={!currentInput}
-              style={{
-                flex: 2,
-                maxWidth: '300px',
-                padding: '15px',
-                background: currentInput ? '#28a745' : '#6c757d',
-                color: 'white',
-                border: 'none',
-                borderRadius: '10px',
-                cursor: currentInput ? 'pointer' : 'not-allowed',
-                fontWeight: '600',
-                fontSize: '16px',
-                transition: 'background 0.2s ease'
-              }}
-              onMouseOver={(e) => {
-                if (currentInput) e.target.style.background = '#218838';
-              }}
-              onMouseOut={(e) => {
-                if (currentInput) e.target.style.background = '#28a745';
-              }}
-            >
-              ✅ Insertar Función
-            </button>
+              {/* Insert Button - spans full width below numbers */}
+              <button
+                onClick={handleInsert}
+                disabled={!currentInput}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  background: currentInput ? '#5C6BC0' : '#B0BEC5',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: currentInput ? 'pointer' : 'not-allowed',
+                  fontWeight: '500',
+                  fontSize: '16px',
+                  transition: 'all 0.2s ease',
+                  marginTop: '8px',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                }}
+                onMouseOver={(e) => {
+                  if (currentInput) {
+                    e.target.style.transform = 'translateY(-2px)';
+                    e.target.style.boxShadow = '0 3px 8px rgba(0,0,0,0.2)';
+                    e.target.style.background = '#3949AB';
+                  }
+                }}
+                onMouseOut={(e) => {
+                  if (currentInput) {
+                    e.target.style.transform = 'translateY(0)';
+                    e.target.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+                    e.target.style.background = '#5C6BC0';
+                  }
+                }}
+              >
+                Insertar Función
+              </button>
+            </div>
           </div>
         </div>
       )}

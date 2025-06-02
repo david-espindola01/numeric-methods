@@ -1,5 +1,5 @@
 # Ignorar solo node_modules del frontend
-/frontend/node_modules/
+/front/node_modules/
 
 # Archivos comunes a ignorar
 .env

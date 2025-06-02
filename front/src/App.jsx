@@ -67,19 +67,21 @@ function App() {
   return (
     <Router>
       <Navbar />
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/fixed-point" element={<FixedPoint />} />
-        <Route path="/bisection" element={<Bisection />} />
-        <Route path="/newton-raphson" element={<NewtonRaphson />} />
-        <Route path="/secant" element={<Secant />} />
-        <Route path="/jacobi" element={<Jacobi />} />
-        <Route path="/gauss-seidel" element={<GaussSeidel />} />
-        <Route path="/euler" element={<Euler />} />
-        <Route path="/romberg" element={<Romberg />} />
-        <Route path="/trapezoid" element={<Trapezoid />} />
-        <Route path="/simpson" element={<Simpson />} />
-      </Routes>
+      <div className="main-content">
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/fixed-point" element={<FixedPoint />} />
+          <Route path="/bisection" element={<Bisection />} />
+          <Route path="/newton-raphson" element={<NewtonRaphson />} />
+          <Route path="/secant" element={<Secant />} />
+          <Route path="/jacobi" element={<Jacobi />} />
+          <Route path="/gauss-seidel" element={<GaussSeidel />} />
+          <Route path="/euler" element={<Euler />} />
+          <Route path="/romberg" element={<Romberg />} />
+          <Route path="/trapezoid" element={<Trapezoid />} />
+          <Route path="/simpson" element={<Simpson />} />
+        </Routes>
+      </div>
     </Router>
   );
 }
