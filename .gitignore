@@ -1,0 +1,9 @@
+# Ignorar solo node_modules del frontend
+/frontend/node_modules/
+
+# Archivos comunes a ignorar
+.env
+*.log
+__pycache__/
+*.pyc
+venv/
