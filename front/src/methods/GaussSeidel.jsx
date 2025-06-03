@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-// Importar los estilos base
 import '../styles/base-styles.css';
 
 const GaussSeidelMethod = () => {
   const [matrixSize, setMatrixSize] = useState(3);
   const [A, setA] = useState([
-    [10, -1, 2],
-    [-1, 11, -1],
-    [2, -1, 10],
+    [0, 0, 0],
+    [0, 0, 0],
+    [0, 0, 0],
   ]);
   const [b, setB] = useState([6, 25, -11]);
   const [result, setResult] = useState(null);
@@ -51,15 +50,15 @@ const GaussSeidelMethod = () => {
   };
 
   return (
-    <div className="section-container max-w-5xl mx-auto">
-      <h2 className="section-title">Método de Gauss-Seidel</h2>
+    <div className="section-container max-w-5xl mx-auto px-4 py-6">
+      <h2 className="section-title text-2xl font-bold mb-6">Método de Gauss-Seidel</h2>
 
-      <div className="input-section mb-4">
-        <label className="input-label block mb-1">Tamaño de la matriz:</label>
+      <div className="mb-4">
+        <label className="block font-medium mb-1">Tamaño de la matriz:</label>
         <select
           value={matrixSize}
           onChange={handleSizeChange}
-          className="input-field"
+          className="input-field px-2 py-1 border rounded"
         >
           {[2, 3, 4, 5].map((size) => (
             <option key={size} value={size}>
@@ -69,20 +68,21 @@ const GaussSeidelMethod = () => {
         </select>
       </div>
 
-      <div className="inline-inputs-group grid-cols-2 gap-6">
+      {/* Inputs de la matriz y el vector */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
         <div>
           <h3 className="font-semibold mb-2">Matriz A:</h3>
-          <table className="data-table border">
+          <table className="data-table border border-gray-300">
             <tbody>
               {A.map((row, i) => (
                 <tr key={i}>
                   {row.map((value, j) => (
-                    <td key={j}>
+                    <td key={j} className="p-1">
                       <input
                         type="number"
                         value={value}
                         onChange={(e) => handleChangeA(i, j, e.target.value)}
-                        className="input-field w-16"
+                        className="input-field w-20 border px-1 py-1 rounded"
                       />
                     </td>
                   ))}
@@ -94,16 +94,16 @@ const GaussSeidelMethod = () => {
 
         <div>
           <h3 className="font-semibold mb-2">Vector b:</h3>
-          <table className="data-table border">
+          <table className="data-table border border-gray-300">
             <tbody>
               {b.map((value, i) => (
                 <tr key={i}>
-                  <td>
+                  <td className="p-1">
                     <input
                       type="number"
                       value={value}
                       onChange={(e) => handleChangeB(i, e.target.value)}
-                      className="input-field w-16"
+                      className="input-field w-20 border px-1 py-1 rounded"
                     />
                   </td>
                 </tr>
@@ -115,43 +115,43 @@ const GaussSeidelMethod = () => {
 
       <button
         onClick={handleSolve}
-        className="primary-button mt-4"
+        className="primary-button bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
       >
         Resolver
       </button>
 
-      {error && <p className="error-message">{error}</p>}
+      {error && <p className="error-message text-red-600 mt-4">{error}</p>}
 
       {result && (
-        <div className="results-section mt-6">
-          <h3 className="section-title text-xl mb-2">Resultado:</h3>
-          <ul className="results-list">
-            <li className="result-item">
+        <div className="results-section mt-8">
+          <h3 className="text-xl font-semibold mb-2">Resultado:</h3>
+          <ul className="mb-4">
+            <li>
               <strong>Solución:</strong> [{result.solution.map((x) => x.toFixed(6)).join(', ')}]
             </li>
-            <li className="result-item">
+            <li>
               <strong>Iteraciones:</strong> {result.iterations}
             </li>
           </ul>
 
-          <h4 className="section-title text-lg mb-2 table-section">Tabla de iteraciones</h4>
+          <h4 className="text-lg font-semibold mb-2">Tabla de iteraciones</h4>
           <div className="overflow-x-auto">
-            <table className="data-table min-w-full border text-sm">
+            <table className="data-table min-w-[700px] border border-gray-400 text-sm whitespace-nowrap">
               <thead>
                 <tr>
-                  <th>Iteración</th>
-                  <th>x (anterior)</th>
-                  <th>x (nuevo)</th>
-                  <th>Error</th>
+                  <th className="px-2 py-1 border">Iteración</th>
+                  <th className="px-2 py-1 border">x (anterior)</th>
+                  <th className="px-2 py-1 border">x (nuevo)</th>
+                  <th className="px-2 py-1 border">Error</th>
                 </tr>
               </thead>
               <tbody>
                 {result.iterations_detail.map((row, i) => (
                   <tr key={i}>
-                    <td>{row.iteration}</td>
-                    <td>[{row.x.map((v) => v.toFixed(6)).join(', ')}]</td>
-                    <td>[{row.x_new.map((v) => v.toFixed(6)).join(', ')}]</td>
-                    <td>{row.error.toExponential(3)}</td>
+                    <td className="px-2 py-1 border">{row.iteration}</td>
+                    <td className="px-2 py-1 border">[{row.x.map((v) => v.toFixed(6)).join(', ')}]</td>
+                    <td className="px-2 py-1 border">[{row.x_new.map((v) => v.toFixed(6)).join(', ')}]</td>
+                    <td className="px-2 py-1 border">{row.error.toExponential(3)}</td>
                   </tr>
                 ))}
               </tbody>

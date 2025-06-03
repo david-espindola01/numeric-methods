@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { parse } from 'mathjs';
 import '../styles/components/MathCalculator.css';
 
-const MathCalculator = ({ onInsert, placeholder = "" }) => {
+const MathCalculator = ({ onInsert, placeholder = "Insertar función..." }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [currentInput, setCurrentInput] = useState('');
   const [cursorPos, setCursorPos] = useState(0);

@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, AreaChart } from 'recharts';
+import '../components/MathCalculator'
+import '../styles/base-styles.css';
 
 const TrapezoidMethod = () => {
   const [functionStr, setFunctionStr] = useState('x**2');
@@ -122,7 +124,6 @@ const TrapezoidMethod = () => {
     <div className="max-w-6xl mx-auto p-6 bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
       <div className="bg-white rounded-xl shadow-xl p-8">
         <h2 className="text-4xl font-bold mb-8 text-center text-blue-800 flex items-center justify-center gap-3">
-          <span className="text-5xl">∫</span>
           Regla del Trapecio
         </h2>
 
@@ -134,11 +135,8 @@ const TrapezoidMethod = () => {
               value={functionStr}
               onChange={(e) => setFunctionStr(e.target.value)}
               className="w-full border border-gray-300 p-4 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg font-mono"
-              placeholder="Ejemplos: x**2, sin(x), x**3 + 2*x, sqrt(x)"
             />
-            <p className="text-sm text-gray-500 mt-2">
-              Funciones disponibles: sin, cos, tan, log, sqrt, exp, abs, pi, e, ** para potencias
-            </p>
+            
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
