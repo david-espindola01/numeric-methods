@@ -10,6 +10,9 @@ import {
   Legend,
 } from 'chart.js';
 
+import MathCalculator from '../components/MathCalculator';
+import '../styles/FixedPoint.css';
+
 ChartJS.register(LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend);
 
 function Bisection() {

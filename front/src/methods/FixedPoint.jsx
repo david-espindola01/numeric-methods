@@ -204,7 +204,7 @@ function FixedPoint() {
         </div>
         
         <button className="calculate-button" type="submit">
-          🚀 Calcular Punto Fijo
+          Calcular Punto Fijo
         </button>
       </form>
 

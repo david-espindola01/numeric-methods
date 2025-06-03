@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
+import { parse } from 'mathjs';
+import '../styles/MathCalculator.css';
 
 const MathCalculator = ({ onInsert, placeholder = "Insertar función..." }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [currentInput, setCurrentInput] = useState('');
+  const [cursorPos, setCursorPos] = useState(0);
+  const [error, setError] = useState('');
 
   const functionButtons = [
     { label: 'sin', value: 'sin(', type: 'function' },
@@ -12,12 +16,8 @@ const MathCalculator = ({ onInsert, placeholder = "Insertar función..." }) => {
     { label: 'ln', value: 'ln(', type: 'function' },
     { label: '√', value: 'sqrt(', type: 'function' },
     { label: 'x²', value: '**2', type: 'power' },
-    { label: 'x³', value: '**3', type: 'power' },
     { label: 'xⁿ', value: '**', type: 'power' },
     { label: '|x|', value: 'abs(', type: 'function' },
-    { label: 'e', value: 'e', type: 'constant' },
-    { label: 'a/b', value: '/', type: 'operator' },
-    // Variables
     { label: 'x', value: 'x', type: 'variable' },
     { label: 'y', value: 'y', type: 'variable' },
     { label: 'z', value: 'z', type: 'variable' },
@@ -27,13 +27,14 @@ const MathCalculator = ({ onInsert, placeholder = "Insertar función..." }) => {
     { label: '(', value: '(', type: 'parenthesis' },
     { label: ')', value: ')', type: 'parenthesis' },
     { label: 'π', value: 'pi', type: 'constant' },
+    { label: 'e', value: 'e', type: 'constant' },
   ];
 
   const mathButtons = [
     { label: '7', value: '7', type: 'number' },
     { label: '8', value: '8', type: 'number' },
     { label: '9', value: '9', type: 'number' },
-    { label: 'DEL', value: 'DEL', type: 'control' },
+    { label: '÷', value: '/', type: 'operator' },
     { label: '4', value: '4', type: 'number' },
     { label: '5', value: '5', type: 'number' },
     { label: '6', value: '6', type: 'number' },
@@ -44,7 +45,6 @@ const MathCalculator = ({ onInsert, placeholder = "Insertar función..." }) => {
     { label: '−', value: '-', type: 'operator' },
     { label: '0', value: '0', type: 'number' },
     { label: '.', value: '.', type: 'number' },
-    // Espacio vacío donde estaba el =
     { label: '', value: '', type: 'empty' },
     { label: '+', value: '+', type: 'operator' },
   ];
@@ -53,10 +53,33 @@ const MathCalculator = ({ onInsert, placeholder = "Insertar función..." }) => {
     { label: '←', value: '←', type: 'move', title: 'Mover cursor a la izquierda' },
     { label: '→', value: '→', type: 'move', title: 'Mover cursor a la derecha' },
     { label: '⌫', value: '⌫', type: 'delete', title: 'Borrar carácter' },
+    { label: 'DEL', value: 'DEL', type: 'control' },
   ];
+
+  const preprocessExpression = (expr) => {
+    const superscripts = {
+      '⁰': '0', '¹': '1', '²': '2', '³': '3', '⁴': '4',
+      '⁵': '5', '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9'
+    };
+    return expr
+      .replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]/g, (match) => superscripts[match] || match)
+      .replace(/\^/g, '**')
+      .replace(/×/g, '*')
+      .replace(/÷/g, '/')
+      .replace(/π/g, 'pi')
+      // Solo inserta * entre número o ) y x, y, z
+      .replace(/(\d|\))(?=[xyz])/g, '$1*');
+  };
 
   const formatPreview = (expression) => {
     return expression
+      .replace(/\^(\d+)/g, (match, exp) => {
+        const superscripts = {
+          '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴',
+          '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹'
+        };
+        return exp.split('').map(digit => superscripts[digit] || digit).join('');
+      })
       .replace(/\*\*(\d+)/g, (match, exp) => {
         const superscripts = {
           '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴',
@@ -69,234 +92,191 @@ const MathCalculator = ({ onInsert, placeholder = "Insertar función..." }) => {
       .replace(/pi/g, 'π')
       .replace(/sqrt\(/g, '√(');
   };
+<div className={`display-preview ${!currentInput ? 'empty-display' : ''}`}>
+  {(() => {
+    const left = formatPreview(currentInput.slice(0, cursorPos));
+    const right = formatPreview(currentInput.slice(cursorPos));
+    return (
+      <>
+        {left}
+        <span style={{
+          display: 'inline-block',
+          width: '2px',
+          height: '1em',
+          background: '#333',
+          verticalAlign: 'middle',
+          margin: '0 1px'
+        }} />
+        {right || <span style={{ opacity: 0.5 }}> </span>}
+      </>
+    );
+  })()}
+</div>
+  const validateInput = (input) => {
+    // Convierte ** a ^ SOLO para validar con mathjs
+    const mathjsInput = preprocessExpression(input).replace(/\*\*/g, '^');
+
+    // Validación básica de paréntesis
+    let stack = [];
+    for (let char of mathjsInput) {
+      if (char === '(') stack.push('(');
+      if (char === ')') {
+        if (!stack.length) return '¡Error: Falta paréntesis de apertura!';
+        stack.pop();
+      }
+    }
+    if (stack.length) return '¡Error: Falta paréntesis de cierre!';
+
+    // Validación avanzada con mathjs
+    try {
+      parse(mathjsInput); // Ahora mathjs entiende la potencia
+      return '';
+    } catch (error) {
+      return `Error de sintaxis: ${error.message.replace('Error: ', '')}`;
+    }
+  };
+
+  const handleInsert = () => {
+    const validationMsg = validateInput(currentInput);
+    if (validationMsg) {
+      setError(validationMsg);
+      return;
+    }
+    if (currentInput) {
+      const processedInput = preprocessExpression(currentInput);
+      onInsert(processedInput);
+      setCurrentInput('');
+      setCursorPos(0);
+      setIsOpen(false);
+      setError('');
+    }
+  };
 
   const handleButtonClick = (value) => {
+    setError('');
     if (value === 'DEL') {
       handleClear();
+      setCursorPos(0);
     } else if (value === '⌫') {
-      handleBackspace();
-    } else if (value === '←' || value === '→') {
-      // Implement cursor movement logic here if needed
+      if (cursorPos > 0) {
+        setCurrentInput(prev =>
+          prev.slice(0, cursorPos - 1) + prev.slice(cursorPos)
+        );
+        setCursorPos(pos => pos - 1);
+      }
+    } else if (value === '←') {
+      setCursorPos(pos => (pos > 0 ? pos - 1 : 0));
+    } else if (value === '→') {
+      setCursorPos(pos => (pos < currentInput.length ? pos + 1 : pos));
     } else if (value) {
-      setCurrentInput(prev => prev + value);
+      setCurrentInput(prev =>
+        prev.slice(0, cursorPos) + value + prev.slice(cursorPos)
+      );
+      setCursorPos(pos => pos + value.length);
     }
   };
 
   const handleClear = () => {
     setCurrentInput('');
-  };
-
-  const handleBackspace = () => {
-    setCurrentInput(prev => prev.slice(0, -1));
-  };
-
-  const handleInsert = () => {
-    if (currentInput) {
-      onInsert(currentInput);
-      setCurrentInput('');
-      setIsOpen(false);
-    }
+    setCursorPos(0);
   };
 
   const handleToggle = () => {
     setIsOpen(!isOpen);
     if (!isOpen) {
       setCurrentInput('');
+      setCursorPos(0);
     }
   };
 
-  const getButtonStyle = (type) => {
-    const baseStyle = {
-      padding: '12px 8px',
-      border: 'none',
-      borderRadius: '6px',
-      cursor: 'pointer',
-      fontSize: '16px',
-      fontWeight: '500',
-      transition: 'all 0.2s ease',
-      boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minWidth: '40px'
-    };
-
+  const getButtonClass = (type) => {
     switch (type) {
-      case 'number':
-        return { ...baseStyle, background: '#f5f5f5', color: '#333' };
-      case 'operator':
-        return { ...baseStyle, background: '#e3f2fd', color: '#1976d2' };
-      case 'function':
-        return { ...baseStyle, background: '#f1f8e9', color: '#689f38' };
-      case 'power':
-        return { ...baseStyle, background: '#fff3e0', color: '#fb8c00' };
-      case 'constant':
-        return { ...baseStyle, background: '#f3e5f5', color: '#8e24aa' };
-      case 'control':
-        return { ...baseStyle, background: '#ffebee', color: '#d32f2f' };
-      case 'move':
-        return { ...baseStyle, background: '#e0e0e0', color: '#616161' };
-      case 'delete':
-        return { ...baseStyle, background: '#ffccbc', color: '#e64a19' };
-      case 'variable':
-        return { ...baseStyle, background: '#e8eaf6', color: '#3949ab' };
-      case 'parenthesis':
-        return { ...baseStyle, background: '#e0f7fa', color: '#00acc1' };
-      case 'empty':
-        return { ...baseStyle, background: 'transparent', boxShadow: 'none', cursor: 'default' };
-      default:
-        return { ...baseStyle, background: '#f5f5f5', color: '#333' };
+      case 'number': return 'calc-button number-button';
+      case 'operator': return 'calc-button operator-button';
+      case 'function': return 'calc-button function-button';
+      case 'power': return 'calc-button power-button';
+      case 'constant': return 'calc-button constant-button';
+      case 'control': return 'calc-button control-button';
+      case 'move': return 'calc-button move-button';
+      case 'delete': return 'calc-button delete-button';
+      case 'variable': return 'calc-button variable-button';
+      case 'parenthesis': return 'calc-button parenthesis-button';
+      case 'empty': return 'empty-button';
+      default: return 'calc-button number-button';
     }
   };
 
   return (
-    <div style={{ position: 'relative', width: '100%' }}>
+    <div className="math-calculator-container">
       <button
         type="button"
         onClick={handleToggle}
-        style={{
-          background: 'linear-gradient(135deg, #455A64 0%, #263238 100%)',
-          color: 'white',
-          border: 'none',
-          padding: '10px 20px',
-          borderRadius: '6px',
-          cursor: 'pointer',
-          fontSize: '14px',
-          fontWeight: '500',
-          boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-          transition: 'all 0.3s ease',
-        }}
-        onMouseOver={(e) => {
-          e.target.style.transform = 'translateY(-2px)';
-          e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
-        }}
-        onMouseOut={(e) => {
-          e.target.style.transform = 'translateY(0)';
-          e.target.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
-        }}
+        className="toggle-button"
       >
         🧮 {placeholder}
       </button>
 
       {isOpen && (
-        <div style={{
-          position: 'absolute',
-          top: '50px',
-          left: '0',
-          right: '0',
-          background: 'white',
-          border: '1px solid #e0e0e0',
-          borderRadius: '12px',
-          padding: '20px',
-          boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)',
-          zIndex: 1000,
-          width: '95%',
-          maxWidth: '800px',
-          margin: '0 auto'
-        }}>
-          {/* Header */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '15px',
-            paddingBottom: '10px',
-            borderBottom: '1px solid #f5f5f5'
-          }}>
-            <h4 style={{ margin: 0, color: '#424242', fontSize: '18px', fontWeight: '500' }}>Calculadora Matemática</h4>
+        <div className="math-calculator-popup">
+          <div className="math-calculator-display-wrapper">
+            <div className="math-calculator-display">
+              <div style={{ width: '100%' }}>
+                {/* Display grande, visual bonito */}
+                <div className={`display-preview ${!currentInput ? 'empty-display' : ''}`}>
+                  {(() => {
+                    const left = formatPreview(currentInput.slice(0, cursorPos));
+                    const right = formatPreview(currentInput.slice(cursorPos));
+                    return (
+                      <>
+                        {left}
+                        <span style={{
+                          display: 'inline-block',
+                          width: '2px',
+                          height: '1em',
+                          background: '#333',
+                          verticalAlign: 'middle',
+                          margin: '0 1px'
+                        }} />
+                        {right || <span style={{ opacity: 0.5 }}> </span>}
+                      </>
+                    );
+                  })()}
+                </div>
+                {/* Display pequeño, formato Python */}
+                <div className="display-raw" style={{ fontSize: '0.85em', color: '#888', marginTop: '2px' }}>
+                  {preprocessExpression(currentInput) || 'vacío'}
+                </div>
+              </div>
+            </div>
             <button
               onClick={handleToggle}
-              style={{
-                background: 'none',
-                border: 'none',
-                fontSize: '20px',
-                cursor: 'pointer',
-                color: '#757575'
-              }}
+              className="math-calculator-close-overlay"
             >
               ×
             </button>
           </div>
 
-          {/* Input Display */}
-          <div style={{
-            background: '#fafafa',
-            border: '1px solid #e0e0e0',
-            borderRadius: '6px',
-            padding: '15px',
-            marginBottom: '15px',
-            minHeight: '60px',
-            fontSize: '18px',
-            fontFamily: 'Cambria, "Times New Roman", serif',
-            display: 'flex',
-            alignItems: 'center',
-            wordBreak: 'break-all'
-          }}>
-            <div style={{ width: '100%' }}>
-              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#212121' }}>
-                {currentInput ? formatPreview(currentInput) : <span style={{ color: '#bdbdbd' }}>Ingresa tu función aquí...</span>}
-              </div>
-              <div style={{ fontSize: '12px', color: '#9e9e9e', marginTop: '5px', fontFamily: 'monospace' }}>
-                {currentInput || 'vacío'}
-              </div>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', gap: '15px' }}>
-            {/* Left Block - Functions */}
-            <div style={{ flex: 1 }}>
-              {/* Control Buttons */}
-              <div style={{
-                display: 'flex',
-                gap: '8px',
-                marginBottom: '10px'
-              }}>
+          <div className="flex-container">
+            <div className="flex-2">
+              <div className="control-buttons-row">
                 {controlButtons.map((btn, index) => (
                   <button
                     key={index}
                     onClick={() => handleButtonClick(btn.value)}
                     title={btn.title}
-                    style={{
-                      ...getButtonStyle(btn.type),
-                      flex: 1,
-                      padding: '10px'
-                    }}
-                    onMouseOver={(e) => {
-                      e.target.style.transform = 'scale(1.05)';
-                      e.target.style.boxShadow = '0 2px 6px rgba(0,0,0,0.15)';
-                    }}
-                    onMouseOut={(e) => {
-                      e.target.style.transform = 'scale(1)';
-                      e.target.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
-                    }}
+                    className={`${getButtonClass(btn.type)} control-button`}
                   >
                     {btn.label}
                   </button>
                 ))}
               </div>
               
-              {/* Function Buttons */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '8px'
-              }}>
+              <div className="button-grid grid-3-col">
                 {functionButtons.map((btn, index) => (
                   <button
                     key={index}
                     onClick={() => handleButtonClick(btn.value)}
-                    style={{
-                      ...getButtonStyle(btn.type),
-                      padding: '12px 8px'
-                    }}
-                    onMouseOver={(e) => {
-                      e.target.style.transform = 'scale(1.05)';
-                      e.target.style.boxShadow = '0 2px 6px rgba(0,0,0,0.15)';
-                    }}
-                    onMouseOut={(e) => {
-                      e.target.style.transform = 'scale(1)';
-                      e.target.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
-                    }}
+                    className={getButtonClass(btn.type)}
                   >
                     {btn.label}
                   </button>
@@ -304,109 +284,70 @@ const MathCalculator = ({ onInsert, placeholder = "Insertar función..." }) => {
               </div>
             </div>
 
-            {/* Right Block - Numbers */}
-            <div style={{ flex: 1 }}>
-              {/* Parenthesis row moved up */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(4, 1fr)',
-                gap: '8px',
-                marginBottom: '8px'
-              }}>
+            <div className="flex-1">
+              <div className="button-grid grid-4-col" style={{ marginBottom: '8px' }}>
                 {parenthesisButtons.map((btn, index) => (
                   <button
                     key={index}
                     onClick={() => handleButtonClick(btn.value)}
-                    style={{
-                      ...getButtonStyle(btn.type),
-                      padding: '12px 8px'
-                    }}
-                    onMouseOver={(e) => {
-                      e.target.style.transform = 'scale(1.05)';
-                      e.target.style.boxShadow = '0 2px 6px rgba(0,0,0,0.15)';
-                    }}
-                    onMouseOut={(e) => {
-                      e.target.style.transform = 'scale(1)';
-                      e.target.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
-                    }}
+                    className={getButtonClass(btn.type)}
                   >
                     {btn.label}
                   </button>
                 ))}
-                {/* Empty space to maintain grid */}
-                <div style={getButtonStyle('empty')}></div>
+                <div className="empty-button"></div>
               </div>
 
-              {/* Numbers grid */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(4, 1fr)',
-                gap: '8px'
-              }}>
-                {mathButtons.map((btn, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handleButtonClick(btn.value)}
-                    style={{
-                      ...getButtonStyle(btn.type),
-                      padding: '12px 8px',
-                      visibility: btn.type === 'empty' ? 'hidden' : 'visible'
-                    }}
-                    onMouseOver={(e) => {
-                      if (btn.type !== 'empty') {
-                        e.target.style.transform = 'scale(1.05)';
-                        e.target.style.boxShadow = '0 2px 6px rgba(0,0,0,0.15)';
-                      }
-                    }}
-                    onMouseOut={(e) => {
-                      if (btn.type !== 'empty') {
-                        e.target.style.transform = 'scale(1)';
-                        e.target.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
-                      }
-                    }}
-                  >
-                    {btn.label}
-                  </button>
-                ))}
+              <div className="button-grid grid-4-col">
+                {mathButtons.map((btn, index) => {
+                  if (btn.label === '.') {
+                    return (
+                      <React.Fragment key={index}>
+                        <button
+                          onClick={() => handleButtonClick(btn.value)}
+                          className={getButtonClass(btn.type)}
+                        >
+                          {btn.label}
+                        </button>
+                        <button
+                          onClick={handleInsert}
+                          disabled={!currentInput}
+                          className="insert-button"
+                          style={{
+                            minWidth: 0,
+                            padding: 0,
+                            fontSize: '14px',
+                            margin: 0,
+                            height: '48px',
+                          }}
+                        >
+                          Insertar
+                        </button>
+                      </React.Fragment>
+                    );
+                  }
+                  if (btn.type === 'empty') {
+                    return null;
+                  }
+                  return (
+                    <button
+                      key={index}
+                      onClick={() => handleButtonClick(btn.value)}
+                      className={getButtonClass(btn.type)}
+                    >
+                      {btn.label}
+                    </button>
+                  );
+                })}
               </div>
-
-              {/* Insert Button - spans full width below numbers */}
-              <button
-                onClick={handleInsert}
-                disabled={!currentInput}
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  background: currentInput ? '#5C6BC0' : '#B0BEC5',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '6px',
-                  cursor: currentInput ? 'pointer' : 'not-allowed',
-                  fontWeight: '500',
-                  fontSize: '16px',
-                  transition: 'all 0.2s ease',
-                  marginTop: '8px',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
-                }}
-                onMouseOver={(e) => {
-                  if (currentInput) {
-                    e.target.style.transform = 'translateY(-2px)';
-                    e.target.style.boxShadow = '0 3px 8px rgba(0,0,0,0.2)';
-                    e.target.style.background = '#3949AB';
-                  }
-                }}
-                onMouseOut={(e) => {
-                  if (currentInput) {
-                    e.target.style.transform = 'translateY(0)';
-                    e.target.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
-                    e.target.style.background = '#5C6BC0';
-                  }
-                }}
-              >
-                Insertar Función
-              </button>
             </div>
           </div>
+
+          {error && (
+            <div style={{ color: 'red', margin: '8px 0', textAlign: 'center', fontWeight: 'bold' }}>
+              {error}
+            </div>
+          )}
         </div>
       )}
     </div>
