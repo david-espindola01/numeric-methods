@@ -11,10 +11,8 @@ const TrapezoidMethod = () => {
   const [graphData, setGraphData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Función mejorada para evaluar expresiones matemáticas
   const evaluateFunction = (functionStr, x) => {
     try {
-      // Reemplazar funciones matemáticas comunes
       let expr = functionStr
         .replace(/sin/g, 'Math.sin')
         .replace(/cos/g, 'Math.cos')
@@ -23,15 +21,12 @@ const TrapezoidMethod = () => {
         .replace(/sqrt/g, 'Math.sqrt')
         .replace(/exp/g, 'Math.exp')
         .replace(/abs/g, 'Math.abs')
-        .replace(/\*\*/g, '**') // Mantener potencias
-        .replace(/\^/g, '**')   // Convertir ^ a **
+        .replace(/\*\*/g, '**')
+        .replace(/\^/g, '**')
         .replace(/pi/g, 'Math.PI')
         .replace(/e(?![a-zA-Z])/g, 'Math.E');
 
-      // Reemplazar x con el valor
       expr = expr.replace(/(?<!Math\.)x/g, `(${x})`);
-      
-      // Evaluar la expresión
       return Function(`"use strict"; return (${expr})`)();
     } catch (error) {
       throw new Error(`Error evaluando función en x=${x}: ${error.message}`);
@@ -46,20 +41,32 @@ const TrapezoidMethod = () => {
     setIsLoading(true);
 
     try {
-      // Validar que todos los campos estén llenos
       if (!functionStr || !a || !b || !n) {
         throw new Error('Todos los campos son obligatorios');
       }
 
-      // Validar que la función se puede evaluar
-      const testX = parseFloat(a) || 0;
-      evaluateFunction(functionStr, testX);
+      const response = await fetch('http://localhost:5010/solve', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          function: functionStr,
+          a,
+          b,
+          n
+        })
+      });
 
-      // Simular llamada al backend (reemplaza con tu endpoint real)
-      const mockResult = calculateTrapezoid(functionStr, parseFloat(a), parseFloat(b), parseInt(n));
-      setResult(mockResult);
-      generateGraph(mockResult);
-      
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Error al calcular la integral');
+      }
+
+      setResult(data);
+      generateGraph(data);
+
     } catch (err) {
       setError(err.message || 'Error desconocido');
     } finally {
@@ -67,33 +74,11 @@ const TrapezoidMethod = () => {
     }
   };
 
-  const calculateTrapezoid = (funcStr, a, b, n) => {
-    const h = (b - a) / n;
-    let sum = evaluateFunction(funcStr, a) + evaluateFunction(funcStr, b);
-    
-    for (let i = 1; i < n; i++) {
-      const xi = a + i * h;
-      sum += 2 * evaluateFunction(funcStr, xi);
-    }
-    
-    const integral = (h / 2) * sum;
-    
-    return {
-      function: funcStr,
-      interval: [a, b],
-      subintervals: n,
-      step_size: h,
-      integral: integral,
-      method: "Regla del Trapecio"
-    };
-  };
-
   const generateGraph = (data) => {
     try {
-      const { interval, subintervals } = data;
+      const { interval, tabla } = data;
       const [aVal, bVal] = interval;
-      
-      // Generar puntos para la curva suave
+
       const numPoints = 200;
       const step = (bVal - aVal) / numPoints;
       const curveData = [];
@@ -103,38 +88,19 @@ const TrapezoidMethod = () => {
         try {
           const y = evaluateFunction(functionStr, x);
           if (isFinite(y)) {
-            curveData.push({
-              x: parseFloat(x.toFixed(6)),
-              y: parseFloat(y.toFixed(6)),
-              function: y
-            });
+            curveData.push({ x: parseFloat(x.toFixed(6)), y: parseFloat(y.toFixed(6)), function: y });
           }
         } catch (error) {
           console.warn(`Error evaluando en x=${x}:`, error.message);
         }
       }
 
-      // Generar puntos para los trapecios
-      const trapezoidStep = (bVal - aVal) / subintervals;
-      const trapezoidPoints = [];
+      const trapezoidPoints = tabla.map(row => ({
+        x: row.x_i,
+        y: row["f(x_i)"],
+        trapezoid: row["f(x_i)"]
+      }));
 
-      for (let i = 0; i <= subintervals; i++) {
-        const x = aVal + i * trapezoidStep;
-        try {
-          const y = evaluateFunction(functionStr, x);
-          if (isFinite(y)) {
-            trapezoidPoints.push({
-              x: parseFloat(x.toFixed(6)),
-              y: parseFloat(y.toFixed(6)),
-              trapezoid: y
-            });
-          }
-        } catch (error) {
-          console.warn(`Error evaluando trapecio en x=${x}:`, error.message);
-        }
-      }
-
-      // Combinar datos para la gráfica
       const combinedData = curveData.map(point => {
         const trapPoint = trapezoidPoints.find(tp => Math.abs(tp.x - point.x) < 0.001);
         return {
@@ -145,7 +111,7 @@ const TrapezoidMethod = () => {
 
       setGraphData({
         curveData: combinedData,
-        trapezoidPoints: trapezoidPoints
+        trapezoidPoints
       });
     } catch (error) {
       setError(`Error generando gráfica: ${error.message}`);
@@ -159,7 +125,7 @@ const TrapezoidMethod = () => {
           <span className="text-5xl">∫</span>
           Regla del Trapecio
         </h2>
-        
+
         <div className="space-y-6 bg-gray-50 p-6 rounded-lg mb-8">
           <div>
             <label className="block font-medium text-gray-700 mb-3 text-lg">Función f(x):</label>
@@ -174,7 +140,7 @@ const TrapezoidMethod = () => {
               Funciones disponibles: sin, cos, tan, log, sqrt, exp, abs, pi, e, ** para potencias
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <label className="block font-medium text-gray-700 mb-2">Límite inferior (a):</label>
@@ -207,7 +173,7 @@ const TrapezoidMethod = () => {
               />
             </div>
           </div>
-          
+
           <button
             onClick={handleSubmit}
             disabled={isLoading || !functionStr || !a || !b || !n}
@@ -234,7 +200,7 @@ const TrapezoidMethod = () => {
               <div className="p-3 bg-white rounded-lg"><strong>Subintervalos:</strong> {result.subintervals}</div>
               <div className="p-3 bg-white rounded-lg"><strong>Tamaño de paso (h):</strong> {result.step_size?.toFixed(6)}</div>
               <div className="md:col-span-2 p-4 bg-green-100 rounded-lg border-2 border-green-300">
-                <strong className="text-lg">Integral aproximada:</strong> 
+                <strong className="text-lg">Integral aproximada:</strong>
                 <span className="text-2xl font-bold text-green-700 ml-3">
                   {typeof result.integral === 'number' ? result.integral.toFixed(8) : result.integral}
                 </span>
@@ -243,6 +209,39 @@ const TrapezoidMethod = () => {
             </div>
           </div>
         )}
+
+        {result?.tabla && (
+          <div className="mt-10">
+            <h3 className="text-xl font-semibold mb-4 text-indigo-800 flex items-center gap-2">
+              <span>📋</span> Tabla de Cálculo
+            </h3>
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm border border-gray-300 bg-white rounded-lg">
+                <thead className="bg-indigo-100">
+                  <tr>
+                    <th className="p-3 border">i</th>
+                    <th className="p-3 border">xᵢ</th>
+                    <th className="p-3 border">f(xᵢ)</th>
+                    <th className="p-3 border">Coeficiente</th>
+                    <th className="p-3 border">Contribución</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {result.tabla.map((fila) => (
+                    <tr key={fila.i} className="text-center hover:bg-indigo-50">
+                      <td className="p-2 border">{fila.i}</td>
+                      <td className="p-2 border">{fila["x_i"].toFixed(6)}</td>
+                      <td className="p-2 border">{fila["f(x_i)"].toFixed(6)}</td>
+                      <td className="p-2 border">{fila.coeficiente}</td>
+                      <td className="p-2 border">{fila.contribucion.toFixed(6)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
 
         {graphData && (
           <div className="mt-8">
@@ -253,19 +252,19 @@ const TrapezoidMethod = () => {
               <ResponsiveContainer width="100%" height={500}>
                 <AreaChart data={graphData.curveData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ff" />
-                  <XAxis 
-                    dataKey="x" 
-                    type="number" 
-                    scale="linear" 
+                  <XAxis
+                    dataKey="x"
+                    type="number"
+                    scale="linear"
                     domain={['dataMin', 'dataMax']}
                     label={{ value: 'x', position: 'insideBottom', offset: -5 }}
                     stroke="#4f46e5"
                   />
-                  <YAxis 
+                  <YAxis
                     label={{ value: 'f(x)', angle: -90, position: 'insideLeft' }}
                     stroke="#4f46e5"
                   />
-                  <Tooltip 
+                  <Tooltip
                     formatter={(value, name) => [value.toFixed(6), name]}
                     labelFormatter={(x) => `x = ${x.toFixed(6)}`}
                     contentStyle={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0' }}
@@ -297,15 +296,6 @@ const TrapezoidMethod = () => {
             </div>
           </div>
         )}
-
-        <div className="mt-8 bg-blue-50 p-6 rounded-lg border border-blue-200">
-          <h4 className="text-lg font-semibold text-blue-800 mb-3">ℹ️ Información sobre la Regla del Trapecio</h4>
-          <p className="text-sm text-blue-700 leading-relaxed">
-            La regla del trapecio es un método de integración numérica que aproxima el área bajo una curva 
-            dividiendo el intervalo en subintervalos y aproximando cada subintervalo con un trapecio. 
-            La fórmula es: <strong>∫f(x)dx ≈ (h/2)[f(a) + 2∑f(xi) + f(b)]</strong>, donde h = (b-a)/n.
-          </p>
-        </div>
       </div>
     </div>
   );

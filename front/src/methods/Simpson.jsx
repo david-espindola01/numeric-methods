@@ -17,88 +17,34 @@ const SimpsonMethod = () => {
   const [n, setN] = useState('4');
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
-  const [graphData, setGraphData] = useState(null);
 
-  const evaluateFunction = (functionStr, x) => {
-    try {
-      let expr = functionStr
-        .replace(/sin/g, 'Math.sin')
-        .replace(/cos/g, 'Math.cos')
-        .replace(/tan/g, 'Math.tan')
-        .replace(/log/g, 'Math.log')
-        .replace(/sqrt/g, 'Math.sqrt')
-        .replace(/exp/g, 'Math.exp')
-        .replace(/abs/g, 'Math.abs')
-        .replace(/\*\*/g, '**')
-        .replace(/\^/g, '**')
-        .replace(/pi/g, 'Math.PI')
-        .replace(/e(?![a-zA-Z])/g, 'Math.E');
-
-      expr = expr.replace(/(?<!Math\.)x/g, `(${x})`);
-      return Function(`"use strict"; return (${expr})`)();
-    } catch (error) {
-      throw new Error(`Error evaluando función en x=${x}: ${error.message}`);
-    }
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setResult(null);
-    setGraphData(null);
 
     try {
-      if (!functionStr || !a || !b || !n) {
-        throw new Error('Todos los campos son obligatorios');
+      const response = await fetch('http://localhost:5009/solve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          function: functionStr,
+          a,
+          b,
+          n
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Error al calcular la integral');
       }
 
-      const nValue = parseInt(n);
-      if (nValue <= 0 || nValue % 2 !== 0) {
-        throw new Error('El número de subintervalos (n) debe ser par y mayor que 0');
-      }
-
-      evaluateFunction(functionStr, parseFloat(a));
-
-      const res = calculateSimpson(functionStr, parseFloat(a), parseFloat(b), nValue);
-      setResult(res);
-      generateGraph(functionStr, parseFloat(a), parseFloat(b));
-
+      setResult(data);
     } catch (err) {
       setError(err.message || 'Error desconocido');
     }
-  };
-
-  const calculateSimpson = (funcStr, a, b, n) => {
-    const h = (b - a) / n;
-    let sum = evaluateFunction(funcStr, a) + evaluateFunction(funcStr, b);
-
-    for (let i = 1; i < n; i += 2) {
-      sum += 4 * evaluateFunction(funcStr, a + i * h);
-    }
-
-    for (let i = 2; i < n; i += 2) {
-      sum += 2 * evaluateFunction(funcStr, a + i * h);
-    }
-
-    return {
-      integral: (h / 3) * sum
-    };
-  };
-
-  const generateGraph = (funcStr, a, b) => {
-    const numPoints = 200;
-    const step = (b - a) / numPoints;
-    const data = [];
-
-    for (let i = 0; i <= numPoints; i++) {
-      const x = a + i * step;
-      const y = evaluateFunction(funcStr, x);
-      if (isFinite(y)) {
-        data.push({ x: parseFloat(x.toFixed(6)), function: parseFloat(y.toFixed(6)) });
-      }
-    }
-
-    setGraphData(data);
   };
 
   return (
@@ -163,39 +109,72 @@ const SimpsonMethod = () => {
         {error && <p className="text-red-600 mt-4">{error}</p>}
 
         {result && (
-          <div className="mt-8 bg-purple-50 p-4 rounded shadow">
-            <h3 className="text-xl font-semibold text-purple-800 mb-2">Resultado:</h3>
-            <p>Integral aproximada por la Regla de Simpson 1/3: <strong>{result.integral.toFixed(6)}</strong></p>
-          </div>
-        )}
+          <>
+            <div className="mt-8 bg-purple-50 p-4 rounded shadow">
+              <h3 className="text-xl font-semibold text-purple-800 mb-2">Resultado:</h3>
+              <p>Integral aproximada por la Regla de Simpson 1/3: <strong>{result.integral.toFixed(6)}</strong></p>
+              <p className="text-sm text-gray-600 mt-1">{result.formula_explanation}</p>
+            </div>
 
-        {graphData && (
-          <div className="mt-10">
-            <h3 className="text-lg font-medium mb-3 text-gray-700">Gráfico de f(x)</h3>
-            <ResponsiveContainer width="100%" height={400}>
-              <AreaChart data={graphData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="x" />
-                <YAxis />
-                <Tooltip />
-                <Area
-                  type="monotone"
-                  dataKey="function"
-                  stroke="#7b2cbf"
-                  fill="#b197fc"
-                  fillOpacity={0.4}
-                  name="Área bajo f(x)"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="function"
-                  stroke="#5a189a"
-                  dot={false}
-                  name="f(x)"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
+            {result.graph_data && (
+              <div className="mt-10">
+                <h3 className="text-lg font-medium mb-3 text-gray-700">Gráfico de f(x)</h3>
+                <ResponsiveContainer width="100%" height={400}>
+                  <AreaChart data={result.graph_data}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="x" />
+                    <YAxis />
+                    <Tooltip />
+                    <Area
+                      type="monotone"
+                      dataKey="function"
+                      stroke="#7b2cbf"
+                      fill="#b197fc"
+                      fillOpacity={0.4}
+                      name="Área bajo f(x)"
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="function"
+                      stroke="#5a189a"
+                      dot={false}
+                      name="f(x)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+
+            {result.table_data && (
+              <div className="mt-10">
+                <h3 className="text-lg font-medium mb-3 text-gray-700">Tabla de Evaluación</h3>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full text-sm border border-gray-300 bg-white rounded-lg">
+                    <thead className="bg-purple-100">
+                      <tr>
+                        <th className="p-2 border">i</th>
+                        <th className="p-2 border">xᵢ</th>
+                        <th className="p-2 border">f(xᵢ)</th>
+                        <th className="p-2 border">Coef.</th>
+                        <th className="p-2 border">Contribución</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {result.table_data.map((row) => (
+                        <tr key={row.i} className="text-center hover:bg-purple-50">
+                          <td className="p-2 border">{row.i}</td>
+                          <td className="p-2 border">{row.x.toFixed(6)}</td>
+                          <td className="p-2 border">{row.fx.toFixed(6)}</td>
+                          <td className="p-2 border">{row.coefficient}</td>
+                          <td className="p-2 border">{row.weighted.toFixed(6)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
