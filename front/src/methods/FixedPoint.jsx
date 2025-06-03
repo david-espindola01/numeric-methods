@@ -23,7 +23,6 @@ function FixedPoint() {
   const [iterations, setIterations] = useState([]);
   const [error, setError] = useState(null);
 
-  // Función para formatear la expresión para mostrar al usuario
   const formatMathExpression = (expression) => {
     return expression
       .replace(/\*\*(\d+)/g, (match, exp) => {
@@ -46,7 +45,6 @@ function FixedPoint() {
       .replace(/abs\(/g, '|');
   };
 
-  // Función para manejar la inserción desde la calculadora
   const handleFunctionInsert = (mathExpression) => {
     setFunctionStr(mathExpression);
   };
@@ -171,7 +169,7 @@ function FixedPoint() {
             />
             <MathCalculator 
               onInsert={handleFunctionInsert}
-              placeholder="Abrir Calculadora"
+              placeholder="Insertar Función"
             />
           </div>
         </div>

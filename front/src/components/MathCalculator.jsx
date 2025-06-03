@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { parse } from 'mathjs';
-import '../styles/MathCalculator.css';
+import '../styles/components/MathCalculator.css';
 
 const MathCalculator = ({ onInsert, placeholder = "Insertar función..." }) => {
   const [isOpen, setIsOpen] = useState(false);

@@ -82,6 +82,7 @@ const SecantMethod = () => {
             <input
               type="text"
               value={formData.function}
+              id='function-input'
               readOnly
               className="input-field bg-gray-100 cursor-not-allowed"
               placeholder="Función seleccionada"
@@ -90,7 +91,7 @@ const SecantMethod = () => {
             />
             <MathCalculator
               onInsert={val => setFormData({ ...formData, function: val })}
-              placeholder="Insertar función..."
+              placeholder="Insertar Función"
               disabled={true}
             />
           </div>

@@ -10,7 +10,7 @@ import {
   Legend,
 } from 'chart.js';
 import MathCalculator from '../components/MathCalculator';
-import '../styles/base-styles.css';
+import '../styles/Bisection.css';
 
 ChartJS.register(LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend);
 
@@ -47,7 +47,6 @@ function Bisection() {
       .replace(/abs\(/g, '|');
   };
 
-  // Manejar inserción desde la calculadora
   const handleFunctionInsert = (mathExpression) => {
     setFunctionStr(mathExpression);
   };
@@ -164,6 +163,7 @@ function Bisection() {
           <div className="function-input-container">
             <input
               className="input-field"
+              id="function-input"
               type="text"
               placeholder="f(x) = "
               value={formatMathExpression(functionStr)}
@@ -173,7 +173,7 @@ function Bisection() {
             />
             <MathCalculator 
               onInsert={handleFunctionInsert}
-              buttonText="Abrir Calculadora"
+              buttonText="Insertar Función"
             />
           </div>
         </div>

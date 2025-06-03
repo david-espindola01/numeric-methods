@@ -10,7 +10,7 @@ import {
   Legend,
 } from 'chart.js';
 // Importar los estilos base
-import '../styles/base-styles.css';
+import '../styles/NewtonRaphson.css';
 // Importar el componente Calculadora
 import Calculadora from '../components/MathCalculator.jsx';
 
@@ -74,23 +74,25 @@ function NewtonRaphson() {
     <div className="section-container max-w-4xl mx-auto">
       <h2 className="section-title">Método de Newton-Raphson</h2>
       <form onSubmit={handleSubmit} className="input-section mb-6">
-        <div className="input-group">
-          <label className="input-label">f(x):</label>
-          {/* Calculadora para ingresar la función */}
-          <Calculadora
-            value={functionStr}
-            onChange={setFunctionStr}
-            placeholder="Ej: x**2 - 2"
-          />
-          {/* Espacio para mostrar la función, solo lectura */}
-          <input
-            type="text"
-            value={functionStr}
-            readOnly
-            className="input-field mt-2 bg-gray-100 cursor-not-allowed"
-            placeholder="Función seleccionada"
-            tabIndex={-1}
-          />
+        <div className="input-group flex flex-row gap-4 items-start">
+          <div className="flex-1">
+            <input
+              type="text"
+              value={functionStr}
+              id="function-input"
+              readOnly
+              className="input-field mt-2 bg-gray-100 cursor-not-allowed w-full"
+              placeholder="f(x)"
+              tabIndex={-1}
+            />
+          </div>
+          <div className="w-[300px]"> {/* Ajusta el ancho según el tamaño de tu Calculadora */}
+            <Calculadora
+              value={functionStr}
+              onChange={setFunctionStr}
+              placeholder="Insertar Función"
+            />
+          </div>
         </div>
         <div className="inline-inputs-group">
           <div className="input-group">

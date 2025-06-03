@@ -13,7 +13,7 @@ import {
   RiShapeLine,
   RiFunctionLine
 } from 'react-icons/ri';
-import '../styles/NavBar.css';
+import '../styles/components/Navbar.css';
 
 function Navbar() {
   return (
