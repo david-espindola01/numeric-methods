@@ -11,12 +11,26 @@
   animation: fadeIn 0.5s ease-out;
 }
 
+/* Título principal reutilizable */
 .section-title {
+  text-align: center;
   color: #2c3e50;
-  font-size: 1.8rem;
-  margin-bottom: 20px;
-  padding-bottom: 10px;
-  font-weight: 600;
+  font-size: 3rem;
+  margin-bottom: 30px;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+/* Icono opcional para el título principal */
+.section-title .icon {
+  font-size: 2.5rem;
+  margin-right: 10px;
+  display: inline-block;
+  vertical-align: middle;
 }
 
 /* Sección de ingreso de datos */
@@ -28,6 +42,11 @@
   display: flex;
   flex-direction: column;
   margin-bottom: 20px;
+  width: 100%;
+}
+
+.input-group {
+  width: 100%;
 }
 
 .input-label {
@@ -44,6 +63,9 @@
   border-radius: 10px;
   transition: all 0.3s ease;
   background: white;
+  width: 100%;
+  padding-right: 48px; /* Espacio para el botón de la calculadora */
+  box-sizing: border-box;
 }
 
 .input-field:focus {
@@ -216,4 +238,40 @@
   .chart-container {
     height: 300px;
   }
+}
+
+/* O agrega en el CSS correspondiente a Bisection */
+
+/* Asegura que el contenedor ocupe todo el ancho */
+.function-input-container {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+/* El input ocupa todo el ancho disponible, pero deja espacio para el botón superpuesto */
+.function-input-container .input-field {
+  width: 100%;
+  padding-right: 48px; /* Espacio para el botón de la calculadora */
+  box-sizing: border-box;
+  min-height: 56px;    /* Aumenta la altura mínima */
+  font-size: 50px;     /* Opcional: texto más grande */
+}
+
+/* El botón de la calculadora se superpone a la derecha (soporta si es un div o un botón) */
+.function-input-container > div:not(:first-child),
+.function-input-container > button,
+.function-input-container .math-calculator-trigger {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 3;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
 }

@@ -157,7 +157,7 @@ function FixedPoint() {
       <form className="fixed-point-form" onSubmit={handleSubmit}>
         <div className="function-input-group">
           <label className="function-label">Función g(x):</label>
-          <div className="function-input-container">
+          <div className="function-input-container" style={{ justifyContent: 'flex-end' }}>
             <input
               className="function-input"
               type="text"
@@ -167,10 +167,16 @@ function FixedPoint() {
               required
               readOnly
             />
+<<<<<<< Updated upstream
             <MathCalculator 
               onInsert={handleFunctionInsert}
               placeholder="Insertar Función"
             />
+=======
+            <div style={{ marginLeft: '10px', display: 'flex', alignItems: 'center' }}>
+              <MathCalculator onInsert={handleFunctionInsert} positionPopup="below" />
+            </div>
+>>>>>>> Stashed changes
           </div>
         </div>
         

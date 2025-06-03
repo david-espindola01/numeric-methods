@@ -50,6 +50,7 @@ const JacobiMethod = () => {
   };
 
   return (
+<<<<<<< Updated upstream
     <div className="section-container max-w-5xl mx-auto p-4">
       <h2 className="section-title text-2xl font-bold mb-6 text-center">Método de Jacobi</h2>
 
@@ -161,14 +162,121 @@ const JacobiMethod = () => {
                     <td className="px-3 py-2 border">
                       {row.error.toExponential(3)}
                     </td>
+=======
+    <>
+      <h2 className="section-title">
+        <span className="icon" role="img" aria-label="icono">🔢</span>
+        Método de Jacobi
+      </h2>
+      <div className="section-container max-w-5xl mx-auto">
+        <div className="input-section mb-4">
+          <label className="input-label block mb-1">Tamaño de la matriz:</label>
+          <select
+            value={matrixSize}
+            onChange={handleSizeChange}
+            className="input-field"
+          >
+            {[2, 3, 4, 5].map((size) => (
+              <option key={size} value={size}>
+                {size}x{size}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="inline-inputs-group grid-cols-2 gap-6">
+          <div>
+            <h3 className="font-semibold mb-2">Matriz A:</h3>
+            <table className="data-table border">
+              <tbody>
+                {A.map((row, i) => (
+                  <tr key={i}>
+                    {row.map((value, j) => (
+                      <td key={j}>
+                        <input
+                          type="number"
+                          value={value}
+                          onChange={(e) => handleChangeA(i, j, e.target.value)}
+                          className="input-field w-16"
+                        />
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div>
+            <h3 className="font-semibold mb-2">Vector b:</h3>
+            <table className="data-table border">
+              <tbody>
+                {b.map((value, i) => (
+                  <tr key={i}>
+                    <td>
+                      <input
+                        type="number"
+                        value={value}
+                        onChange={(e) => handleChangeB(i, e.target.value)}
+                        className="input-field w-16"
+                      />
+                    </td>
+>>>>>>> Stashed changes
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         </div>
-      )}
-    </div>
+
+        <button
+          onClick={handleSolve}
+          className="primary-button mt-4"
+        >
+          Resolver
+        </button>
+
+        {error && <p className="error-message">{error}</p>}
+
+        {result && (
+          <div className="results-section mt-6">
+            <h3 className="section-title text-xl mb-2">Resultado:</h3>
+            <ul className="results-list">
+              <li className="result-item">
+                <strong>Solución:</strong> [{result.solution.map((x) => x.toFixed(6)).join(', ')}]
+              </li>
+              <li className="result-item">
+                <strong>Iteraciones:</strong> {result.iterations}
+              </li>
+            </ul>
+
+            <h4 className="section-title text-lg mb-2 table-section">Tabla de iteraciones</h4>
+            <div className="overflow-x-auto">
+              <table className="data-table min-w-full border text-sm">
+                <thead>
+                  <tr>
+                    <th>Iteración</th>
+                    <th>x (anterior)</th>
+                    <th>x (nuevo)</th>
+                    <th>Error</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {result.iterations_detail.map((row, i) => (
+                    <tr key={i}>
+                      <td>{row.iteration}</td>
+                      <td>[{row.x.map((v) => v.toFixed(6)).join(', ')}]</td>
+                      <td>[{row.x_new.map((v) => v.toFixed(6)).join(', ')}]</td>
+                      <td>{row.error.toExponential(3)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
+    </>
   );
 };
 
