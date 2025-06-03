@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+// Importar los estilos base
+import '../styles/base-styles.css';
 
 const JacobiMethod = () => {
   const [matrixSize, setMatrixSize] = useState(3);
@@ -49,15 +51,15 @@ const JacobiMethod = () => {
   };
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
-      <h2 className="text-2xl font-bold mb-4">Método de Jacobi</h2>
+    <div className="section-container max-w-5xl mx-auto">
+      <h2 className="section-title">Método de Jacobi</h2>
 
-      <div className="mb-4">
-        <label className="block mb-1 font-medium">Tamaño de la matriz:</label>
+      <div className="input-section mb-4">
+        <label className="input-label block mb-1">Tamaño de la matriz:</label>
         <select
           value={matrixSize}
           onChange={handleSizeChange}
-          className="p-2 border rounded"
+          className="input-field"
         >
           {[2, 3, 4, 5].map((size) => (
             <option key={size} value={size}>
@@ -67,20 +69,20 @@ const JacobiMethod = () => {
         </select>
       </div>
 
-      <div className="grid grid-cols-2 gap-6">
+      <div className="inline-inputs-group grid-cols-2 gap-6">
         <div>
           <h3 className="font-semibold mb-2">Matriz A:</h3>
-          <table className="border">
+          <table className="data-table border">
             <tbody>
               {A.map((row, i) => (
                 <tr key={i}>
                   {row.map((value, j) => (
-                    <td key={j} className="border p-1">
+                    <td key={j}>
                       <input
                         type="number"
                         value={value}
                         onChange={(e) => handleChangeA(i, j, e.target.value)}
-                        className="w-16 p-1 border rounded"
+                        className="input-field w-16"
                       />
                     </td>
                   ))}
@@ -92,16 +94,16 @@ const JacobiMethod = () => {
 
         <div>
           <h3 className="font-semibold mb-2">Vector b:</h3>
-          <table className="border">
+          <table className="data-table border">
             <tbody>
               {b.map((value, i) => (
                 <tr key={i}>
-                  <td className="border p-1">
+                  <td>
                     <input
                       type="number"
                       value={value}
                       onChange={(e) => handleChangeB(i, e.target.value)}
-                      className="w-16 p-1 border rounded"
+                      className="input-field w-16"
                     />
                   </td>
                 </tr>
@@ -113,41 +115,43 @@ const JacobiMethod = () => {
 
       <button
         onClick={handleSolve}
-        className="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        className="primary-button mt-4"
       >
         Resolver
       </button>
 
-      {error && <p className="mt-4 text-red-600 font-semibold">{error}</p>}
+      {error && <p className="error-message">{error}</p>}
 
       {result && (
-        <div className="mt-6">
-          <h3 className="text-xl font-semibold mb-2">Resultado:</h3>
-          <p>
-            <strong>Solución:</strong> [{result.solution.map((x) => x.toFixed(6)).join(', ')}]
-          </p>
-          <p>
-            <strong>Iteraciones:</strong> {result.iterations}
-          </p>
+        <div className="results-section mt-6">
+          <h3 className="section-title text-xl mb-2">Resultado:</h3>
+          <ul className="results-list">
+            <li className="result-item">
+              <strong>Solución:</strong> [{result.solution.map((x) => x.toFixed(6)).join(', ')}]
+            </li>
+            <li className="result-item">
+              <strong>Iteraciones:</strong> {result.iterations}
+            </li>
+          </ul>
 
-          <h4 className="text-lg font-semibold mt-4 mb-2">Tabla de iteraciones</h4>
+          <h4 className="section-title text-lg mb-2 table-section">Tabla de iteraciones</h4>
           <div className="overflow-x-auto">
-            <table className="min-w-full border text-sm">
-              <thead className="bg-gray-100">
+            <table className="data-table min-w-full border text-sm">
+              <thead>
                 <tr>
-                  <th className="border px-3 py-2">Iteración</th>
-                  <th className="border px-3 py-2">x (anterior)</th>
-                  <th className="border px-3 py-2">x (nuevo)</th>
-                  <th className="border px-3 py-2">Error</th>
+                  <th>Iteración</th>
+                  <th>x (anterior)</th>
+                  <th>x (nuevo)</th>
+                  <th>Error</th>
                 </tr>
               </thead>
               <tbody>
                 {result.iterations_detail.map((row, i) => (
                   <tr key={i}>
-                    <td className="border px-3 py-1 text-center">{row.iteration}</td>
-                    <td className="border px-3 py-1">[{row.x.map((v) => v.toFixed(6)).join(', ')}]</td>
-                    <td className="border px-3 py-1">[{row.x_new.map((v) => v.toFixed(6)).join(', ')}]</td>
-                    <td className="border px-3 py-1">{row.error.toExponential(3)}</td>
+                    <td>{row.iteration}</td>
+                    <td>[{row.x.map((v) => v.toFixed(6)).join(', ')}]</td>
+                    <td>[{row.x_new.map((v) => v.toFixed(6)).join(', ')}]</td>
+                    <td>{row.error.toExponential(3)}</td>
                   </tr>
                 ))}
               </tbody>

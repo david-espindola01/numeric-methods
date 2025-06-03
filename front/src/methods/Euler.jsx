@@ -12,6 +12,8 @@ import {
   Filler
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
+// Importar los estilos base
+import '../styles/base-styles.css';
 
 ChartJS.register(
   CategoryScale,
@@ -113,113 +115,115 @@ const EulerMethod = () => {
   };
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <h2 className="text-2xl font-bold mb-4">Método de Euler</h2>
+    <div className="section-container max-w-6xl mx-auto">
+      <h2 className="section-title">Método de Euler</h2>
 
-      <div className="max-w-md mx-auto mb-6">
+      <div className="input-section max-w-md mx-auto mb-6">
         <div className="space-y-4">
-          <div>
-            <label className="block mb-1 font-medium">Función dy/dx:</label>
+          <div className="input-group">
+            <label className="input-label">Función dy/dx:</label>
             <input
               type="text"
               value={functionStr}
               onChange={(e) => setFunctionStr(e.target.value)}
-              className="w-full p-2 border rounded"
+              className="input-field"
               placeholder="Ej: x + y, x*y, sin(x) + y"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block mb-1 font-medium">x₀ (inicial):</label>
+          <div className="inline-inputs-group">
+            <div className="input-group">
+              <label className="input-label">x₀ (inicial):</label>
               <input
                 type="number"
                 step="any"
                 value={x0}
                 onChange={(e) => setX0(e.target.value)}
-                className="w-full p-2 border rounded"
+                className="input-field"
               />
             </div>
-            <div>
-              <label className="block mb-1 font-medium">y₀ (inicial):</label>
+            <div className="input-group">
+              <label className="input-label">y₀ (inicial):</label>
               <input
                 type="number"
                 step="any"
                 value={y0}
                 onChange={(e) => setY0(e.target.value)}
-                className="w-full p-2 border rounded"
+                className="input-field"
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block mb-1 font-medium">Paso (h):</label>
+          <div className="inline-inputs-group">
+            <div className="input-group">
+              <label className="input-label">Paso (h):</label>
               <input
                 type="number"
                 step="any"
                 value={h}
                 onChange={(e) => setH(e.target.value)}
-                className="w-full p-2 border rounded"
+                className="input-field"
               />
             </div>
-            <div>
-              <label className="block mb-1 font-medium">x final:</label>
+            <div className="input-group">
+              <label className="input-label">x final:</label>
               <input
                 type="number"
                 step="any"
                 value={xFinal}
                 onChange={(e) => setXFinal(e.target.value)}
-                className="w-full p-2 border rounded"
+                className="input-field"
               />
             </div>
           </div>
 
           <button
             onClick={handleSolve}
-            className="w-full bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700"
+            className="primary-button"
           >
             Resolver
           </button>
         </div>
       </div>
 
-      {error && <p className="mt-4 text-red-600 font-semibold">{error}</p>}
+      {error && <p className="error-message">{error}</p>}
 
       {result && (
-        <div className="mt-6">
+        <div className="results-section mt-6">
           {/* Información del resultado */}
-          <h3 className="text-xl font-semibold mb-2">Resultado:</h3>
+          <h3 className="section-title text-xl mb-2">Resultado:</h3>
           <div className="bg-gray-50 p-4 rounded mb-6">
-            <p><strong>Método:</strong> {result.method}</p>
-            <p><strong>Función:</strong> dy/dx = {result.function}</p>
-            <p><strong>Iteraciones:</strong> {result.iterations}</p>
-            <p><strong>Valor final:</strong> y({result.final_value.x.toFixed(6)}) = {result.final_value.y.toFixed(6)}</p>
+            <ul className="results-list">
+              <li className="result-item"><strong>Método:</strong> {result.method}</li>
+              <li className="result-item"><strong>Función:</strong> dy/dx = {result.function}</li>
+              <li className="result-item"><strong>Iteraciones:</strong> {result.iterations}</li>
+              <li className="result-item"><strong>Valor final:</strong> y({result.final_value.x.toFixed(6)}) = {result.final_value.y.toFixed(6)}</li>
+            </ul>
           </div>
 
           {/* Tabla de iteraciones */}
-          <h4 className="text-lg font-semibold mb-2">Tabla de iteraciones</h4>
+          <h4 className="section-title text-lg mb-2 table-section">Tabla de iteraciones</h4>
           <div className="overflow-x-auto mb-8">
-            <table className="min-w-full border text-sm">
-              <thead className="bg-gray-100">
+            <table className="data-table min-w-full border text-sm">
+              <thead>
                 <tr>
-                  <th className="border px-3 py-2">Paso</th>
-                  <th className="border px-3 py-2">x</th>
-                  <th className="border px-3 py-2">y</th>
-                  <th className="border px-3 py-2">f(x,y) = dy/dx</th>
-                  <th className="border px-3 py-2">y siguiente</th>
+                  <th>Paso</th>
+                  <th>x</th>
+                  <th>y</th>
+                  <th>f(x,y) = dy/dx</th>
+                  <th>y siguiente</th>
                 </tr>
               </thead>
               <tbody>
                 {result.iterations_detail.map((row, i) => (
-                  <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                    <td className="border px-3 py-1 text-center">{row.step}</td>
-                    <td className="border px-3 py-1">{row.x}</td>
-                    <td className="border px-3 py-1">{row.y}</td>
-                    <td className="border px-3 py-1">
+                  <tr key={i}>
+                    <td>{row.step}</td>
+                    <td>{row.x}</td>
+                    <td>{row.y}</td>
+                    <td>
                       {row.slope !== null ? row.slope : '—'}
                     </td>
-                    <td className="border px-3 py-1">
+                    <td>
                       {row.y_next !== null ? row.y_next : '—'}
                     </td>
                   </tr>
@@ -229,8 +233,8 @@ const EulerMethod = () => {
           </div>
 
           {/* Gráfico */}
-          <h3 className="text-xl font-semibold mb-4">Gráfico de la solución:</h3>
-          <div className="bg-white p-4 border rounded">
+          <h3 className="section-title text-xl mb-4 chart-section">Gráfico de la solución:</h3>
+          <div className="chart-container bg-white p-4 border rounded">
             <Line options={chartOptions} data={getChartData()} />
           </div>
         </div>

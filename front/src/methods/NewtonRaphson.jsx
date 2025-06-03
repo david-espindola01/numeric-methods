@@ -9,6 +9,10 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
+// Importar los estilos base
+import '../styles/base-styles.css';
+// Importar el componente Calculadora
+import Calculadora from '../components/MathCalculator.jsx';
 
 ChartJS.register(LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend);
 
@@ -67,88 +71,117 @@ function NewtonRaphson() {
   };
 
   return (
-    <div>
-      <h2>Método de Newton-Raphson</h2>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          placeholder="f(x) = "
-          value={functionStr}
-          onChange={(e) => setFunctionStr(e.target.value)}
-          required
-        />
-        <input
-          type="number"
-          placeholder="x₀"
-          value={x0}
-          onChange={(e) => setX0(e.target.value)}
-          required
-        />
-        <input
-          type="number"
-          step="any"
-          placeholder="Tolerancia"
-          value={tolerance}
-          onChange={(e) => setTolerance(e.target.value)}
-        />
-        <input
-          type="number"
-          placeholder="Iteraciones máximas"
-          value={maxIterations}
-          onChange={(e) => setMaxIterations(e.target.value)}
-        />
-        <button type="submit">Calcular</button>
+    <div className="section-container max-w-4xl mx-auto">
+      <h2 className="section-title">Método de Newton-Raphson</h2>
+      <form onSubmit={handleSubmit} className="input-section mb-6">
+        <div className="input-group">
+          <label className="input-label">f(x):</label>
+          {/* Calculadora para ingresar la función */}
+          <Calculadora
+            value={functionStr}
+            onChange={setFunctionStr}
+            placeholder="Ej: x**2 - 2"
+          />
+          {/* Espacio para mostrar la función, solo lectura */}
+          <input
+            type="text"
+            value={functionStr}
+            readOnly
+            className="input-field mt-2 bg-gray-100 cursor-not-allowed"
+            placeholder="Función seleccionada"
+            tabIndex={-1}
+          />
+        </div>
+        <div className="inline-inputs-group">
+          <div className="input-group">
+            <label className="input-label">x₀:</label>
+            <input
+              type="number"
+              placeholder="x₀"
+              value={x0}
+              onChange={(e) => setX0(e.target.value)}
+              required
+              className="input-field"
+            />
+          </div>
+          <div className="input-group">
+            <label className="input-label">Tolerancia:</label>
+            <input
+              type="number"
+              step="any"
+              placeholder="Tolerancia"
+              value={tolerance}
+              onChange={(e) => setTolerance(e.target.value)}
+              className="input-field"
+            />
+          </div>
+          <div className="input-group">
+            <label className="input-label">Iteraciones máximas:</label>
+            <input
+              type="number"
+              placeholder="Iteraciones máximas"
+              value={maxIterations}
+              onChange={(e) => setMaxIterations(e.target.value)}
+              className="input-field"
+            />
+          </div>
+        </div>
+        <button type="submit" className="primary-button mt-4">Calcular</button>
       </form>
 
       {result && (
-        <div>
-          <h3>Resultado:</h3>
+        <div className="results-section mt-6">
+          <h3 className="section-title text-xl mb-2">Resultado:</h3>
           {result.error ? (
-            <p style={{ color: 'red' }}>{result.error}</p>
+            <p className="error-message">{result.error}</p>
           ) : (
-            <ul>
-              <li><strong>f(x):</strong> {result.function}</li>
-              <li><strong>f'(x):</strong> {result.derivative}</li>
-              <li><strong>Raíz:</strong> {result.root}</li>
-              <li><strong>Iteraciones:</strong> {result.iterations}</li>
-              <li><strong>Error:</strong> {result.error}</li>
+            <ul className="results-list">
+              <li className="result-item"><strong>f(x):</strong> {result.function}</li>
+              <li className="result-item"><strong>f'(x):</strong> {result.derivative}</li>
+              <li className="result-item"><strong>Raíz:</strong> {result.root}</li>
+              <li className="result-item"><strong>Iteraciones:</strong> {result.iterations}</li>
+              <li className="result-item"><strong>Error:</strong> {result.error}</li>
             </ul>
           )}
         </div>
       )}
 
       {iterations.length > 0 && (
-        <div>
-          <h3>Tabla de Iteraciones</h3>
-          <table border="1">
-            <thead>
-              <tr>
-                <th>Iteración</th>
-                <th>xₙ</th>
-                <th>f(xₙ)</th>
-                <th>f'(xₙ)</th>
-                <th>Error</th>
-              </tr>
-            </thead>
-            <tbody>
-              {iterations.map((row, i) => (
-                <tr key={i}>
-                  <td>{row.iteration}</td>
-                  <td>{row.x}</td>
-                  <td>{row.fx}</td>
-                  <td>{row.fpx}</td>
-                  <td>{row.error}</td>
+        <div className="results-section mt-6">
+          <h4 className="section-title text-lg mb-2 table-section">Tabla de Iteraciones</h4>
+          <div className="overflow-x-auto">
+            <table className="data-table min-w-full border text-sm">
+              <thead>
+                <tr>
+                  <th>Iteración</th>
+                  <th>xₙ</th>
+                  <th>f(xₙ)</th>
+                  <th>f'(xₙ)</th>
+                  <th>Error</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {iterations.map((row, i) => (
+                  <tr key={i}>
+                    <td>{row.iteration}</td>
+                    <td>{row.x}</td>
+                    <td>{row.fx}</td>
+                    <td>{row.fpx}</td>
+                    <td>{row.error}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-          <h3>Gráfica</h3>
-          <Line data={chartData} />
+          <h3 className="section-title text-xl mb-4 chart-section">Gráfica</h3>
+          <div className="chart-container bg-white p-4 border rounded">
+            <Line data={chartData} />
+          </div>
         </div>
       )}
 
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {error && <p className="error-message">{error}</p>}
     </div>
   );
 }
