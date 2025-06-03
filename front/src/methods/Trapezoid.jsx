@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, AreaChart } from 'recharts';
-import '../styles/base-styles.css';
 
 const TrapezoidMethod = () => {
   const [functionStr, setFunctionStr] = useState('x**2');
@@ -120,7 +119,6 @@ const TrapezoidMethod = () => {
   };
 
   return (
-<<<<<<< Updated upstream
     <div className="max-w-6xl mx-auto p-6 bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
       <div className="bg-white rounded-xl shadow-xl p-8">
         <h2 className="text-4xl font-bold mb-8 text-center text-blue-800 flex items-center justify-center gap-3">
@@ -131,26 +129,13 @@ const TrapezoidMethod = () => {
         <div className="space-y-6 bg-gray-50 p-6 rounded-lg mb-8">
           <div>
             <label className="block font-medium text-gray-700 mb-3 text-lg">Función f(x):</label>
-=======
-    <>
-      <h2 className="section-title">
-        <span className="icon" role="img" aria-label="icono">🔢</span>
-        Regla del Trapecio
-      </h2>
-      <div className="section-container">
-        <form onSubmit={handleSubmit} className="input-section">
-          <div className="input-group">
-            <label className="input-label">Función f(x):</label>
->>>>>>> Stashed changes
             <input
-              className="input-field"
               type="text"
               value={functionStr}
               onChange={(e) => setFunctionStr(e.target.value)}
-              placeholder="Ejemplo: x**2, sin(x), x**3 + 2*x, sqrt(x)"
-              required
+              className="w-full border border-gray-300 p-4 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg font-mono"
+              placeholder="Ejemplos: x**2, sin(x), x**3 + 2*x, sqrt(x)"
             />
-<<<<<<< Updated upstream
             <p className="text-sm text-gray-500 mt-2">
               Funciones disponibles: sin, cos, tan, log, sqrt, exp, abs, pi, e, ** para potencias
             </p>
@@ -189,58 +174,22 @@ const TrapezoidMethod = () => {
             </div>
           </div>
 
-=======
-            <div className="input-hint">
-              Funciones: sin, cos, tan, log, sqrt, exp, abs, pi, e, ** para potencias
-            </div>
-          </div>
-          <div className="inline-inputs-group">
-            <input
-              className="input-field"
-              type="number"
-              step="any"
-              placeholder="Límite inferior (a)"
-              value={a}
-              onChange={(e) => setA(e.target.value)}
-              required
-            />
-            <input
-              className="input-field"
-              type="number"
-              step="any"
-              placeholder="Límite superior (b)"
-              value={b}
-              onChange={(e) => setB(e.target.value)}
-              required
-            />
-            <input
-              className="input-field"
-              type="number"
-              min="1"
-              placeholder="Subintervalos (n)"
-              value={n}
-              onChange={(e) => setN(e.target.value)}
-              required
-            />
-          </div>
->>>>>>> Stashed changes
           <button
-            type="submit"
-            className="primary-button"
-            disabled={isLoading}
+            onClick={handleSubmit}
+            disabled={isLoading || !functionStr || !a || !b || !n}
+            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4 rounded-lg hover:from-blue-700 hover:to-indigo-700 disabled:from-blue-400 disabled:to-indigo-400 transition-all duration-300 font-medium text-lg shadow-lg"
           >
-            {isLoading ? 'Calculando...' : 'Calcular'}
+            {isLoading ? '🔄 Calculando...' : '📊 Calcular Integral'}
           </button>
-        </form>
+        </div>
 
         {error && (
-          <div className="error-message">
-            ❌ {error}
+          <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+            <strong>❌ Error:</strong> {error}
           </div>
         )}
 
         {result && (
-<<<<<<< Updated upstream
           <div className="mb-8 bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-lg border border-green-200">
             <h3 className="text-2xl font-semibold mb-4 text-green-800 flex items-center gap-2">
               <span>✅</span> Resultado
@@ -258,30 +207,6 @@ const TrapezoidMethod = () => {
               </div>
               <div className="p-3 bg-white rounded-lg"><strong>Método:</strong> {result.method}</div>
             </div>
-=======
-          <div className="section-container results-section">
-            <h3 className="section-title">Resultado</h3>
-            <ul className="results-list">
-              <li className="result-item">
-                <strong>Función:</strong> f(x) = {result.function}
-              </li>
-              <li className="result-item">
-                <strong>Intervalo:</strong> [{result.interval[0]}, {result.interval[1]}]
-              </li>
-              <li className="result-item">
-                <strong>Subintervalos:</strong> {result.subintervals}
-              </li>
-              <li className="result-item">
-                <strong>Tamaño de paso (h):</strong> {result.step_size?.toFixed(6)}
-              </li>
-              <li className="result-item">
-                <strong>Integral aproximada:</strong> <span style={{ color: "#059669", fontWeight: "bold" }}>{typeof result.integral === 'number' ? result.integral.toFixed(8) : result.integral}</span>
-              </li>
-              <li className="result-item">
-                <strong>Método:</strong> {result.method}
-              </li>
-            </ul>
->>>>>>> Stashed changes
           </div>
         )}
 
@@ -319,11 +244,13 @@ const TrapezoidMethod = () => {
 
 
         {graphData && (
-          <div className="section-container chart-section">
-            <h3 className="section-title">Gráfica de la Función y Aproximación</h3>
-            <div className="chart-container">
-              <ResponsiveContainer width="100%" height={400}>
-                <AreaChart data={graphData.curveData}>
+          <div className="mt-8">
+            <h3 className="text-2xl font-semibold mb-6 text-blue-800 flex items-center gap-2">
+              <span>📈</span> Visualización de la Función y Aproximación
+            </h3>
+            <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-lg">
+              <ResponsiveContainer width="100%" height={500}>
+                <AreaChart data={graphData.curveData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ff" />
                   <XAxis
                     dataKey="x"
@@ -362,27 +289,15 @@ const TrapezoidMethod = () => {
                   />
                 </AreaChart>
               </ResponsiveContainer>
-              <div className="chart-hint">
-                <p>La línea roja muestra los puntos utilizados para la aproximación trapezoidal.</p>
+              <div className="mt-4 text-center text-sm text-gray-600">
+                <p>La línea roja muestra los puntos utilizados para la aproximación trapezoidal</p>
                 <p>El área sombreada representa la función original f(x) = {functionStr}</p>
               </div>
             </div>
           </div>
         )}
-<<<<<<< Updated upstream
-=======
-
-        <div className="section-container info-section">
-          <h4 className="section-title">ℹ️ Información sobre la Regla del Trapecio</h4>
-          <p>
-            La regla del trapecio es un método de integración numérica que aproxima el área bajo una curva
-            dividiendo el intervalo en subintervalos y aproximando cada subintervalo con un trapecio.
-            La fórmula es: <strong>∫f(x)dx ≈ (h/2)[f(a) + 2∑f(xi) + f(b)]</strong>, donde h = (b-a)/n.
-          </p>
-        </div>
->>>>>>> Stashed changes
       </div>
-    </>
+    </div>
   );
 };
 
