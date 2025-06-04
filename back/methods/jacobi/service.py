@@ -145,4 +145,4 @@ def jacobi(A, b, tolerance, max_iterations):
         raise Exception(f"Error en el algoritmo de Jacobi: {str(e)}")
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5006, debug=True)
+    app.run(host='0.0.0.0', port=5005, debug=True)

@@ -360,6 +360,6 @@ def metodo_romberg(f, f_function_str, a, b, tolerancia, max_iteraciones):
 
 if __name__ == '__main__':
     try:
-        app.run(host='0.0.0.0', port=5011, debug=True)
+        app.run(host='0.0.0.0', port=5010, debug=True)
     except Exception as e:
         print(f"Error al iniciar el servidor: {e}")

@@ -7,6 +7,6 @@ COPY service.py .
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-EXPOSE 5006
+EXPOSE 5005
 
 CMD ["python", "service.py"]

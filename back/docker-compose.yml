@@ -27,34 +27,34 @@ services:
     build: ./methods/jacobi
     container_name: jacobi
     ports:
-      - "5006:5006"
+      - "5005:5005"
 
   gauss_seidel:
     build: ./methods/gauss-seidel
     container_name: gauss_seidel
     ports:
-      - "5007:5007"
+      - "5006:5006"
 
   euler:
     build: ./methods/euler
     container_name: euler
     ports:
-      - "5008:5008"
+      - "5007:5007"
 
   simpson:
     build: ./methods/simpson
     container_name: simpson
     ports:
-      - "5009:5009"
+      - "5008:5008"
 
   trapezoid:
     build: ./methods/trapezoid
     container_name: trapezoid
     ports:
-      - "5010:5010"
+      - "5009:5009"
 
   romberg:
     build: ./methods/romberg
     container_name: romberg
     ports:
-      - "5011:5011"
+      - "5010:5010"
