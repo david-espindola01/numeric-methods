@@ -145,13 +145,42 @@ def bisection_solve():
                 "error": f"No se puede calcular la función en el límite superior {xu}: {str(e)}. Verifica que la función y el límite sean compatibles."
             }), 400
 
+        # Modificación principal: buscar la primera raíz válida o detectar raíces exactas
         try:
+            # Verificar si alguno de los extremos es ya una raíz exacta
+            if abs(f_xi) < tolerancia:
+                return jsonify({
+                    "function": function_str,
+                    "root": float(xi),
+                    "iterations": 0,
+                    "error": 0.0,
+                    "converged": True,
+                    "message": f"¡Raíz exacta encontrada en el límite inferior! x = {xi}",
+                    "iterations_detail": []
+                })
+            
+            if abs(f_xu) < tolerancia:
+                return jsonify({
+                    "function": function_str,
+                    "root": float(xu),
+                    "iterations": 0,
+                    "error": 0.0,
+                    "converged": True,
+                    "message": f"¡Raíz exacta encontrada en el límite superior! x = {xu}",
+                    "iterations_detail": []
+                })
+            
+            # Si no hay cambio de signo, buscar un intervalo válido
             if f_xi * f_xu >= 0:
-                xi, xu = find_valid_interval(f, xi, xu)
-        except ValueError as e:
-            return jsonify({
-                "error": f"No se pudo encontrar un intervalo válido: {str(e)}. El método de bisección necesita que la función cambie de signo en el intervalo. Prueba con límites diferentes."
-            }), 400
+                interval_result = find_first_valid_root(f, xi, xu, tolerancia)
+                if interval_result['found']:
+                    xi, xu = interval_result['xi'], interval_result['xu']
+                    # Agregar información sobre múltiples raíces al contexto
+                    multiple_roots_info = interval_result.get('multiple_roots_info', None)
+                else:
+                    return jsonify({
+                        "error": f"No se pudo encontrar un intervalo válido: {interval_result['message']}. El método de bisección necesita que la función cambie de signo en el intervalo. Prueba con límites diferentes."
+                    }), 400
         except Exception as e:
             return jsonify({
                 "error": f"Error al buscar un intervalo válido: {str(e)}. Contacta al soporte técnico si el problema persiste."
@@ -159,6 +188,13 @@ def bisection_solve():
 
         try:
             result = biseccion(f, function_str, xi, xu, tolerancia, max_iteraciones)
+            
+            # Agregar información sobre múltiples raíces si existe
+            if 'multiple_roots_info' in locals() and multiple_roots_info:
+                if result.get('converged', False):
+                    current_message = result.get('message', '')
+                    result['message'] = f"{current_message} {multiple_roots_info}"
+            
             return jsonify(result)
         except Exception as e:
             return jsonify({
@@ -197,7 +233,232 @@ def parse_function(function_str):
     except Exception as e:
         raise ValueError(f"No se pudo interpretar la función '{function_str}': {str(e)}")
 
+def find_first_valid_root(f, xi_original, xu_original, tolerance, step=0.1, max_search_range=100):
+    """
+    Busca la primera raíz válida expandiendo el intervalo o buscando en subintervalos.
+    Devuelve un diccionario con la información del resultado y detecta múltiples raíces.
+    """
+    original_interval = [xi_original, xu_original]
+    found_intervals = []  # Para almacenar todos los intervalos válidos encontrados
+    
+    # Verificar primero si hay raíces exactas en puntos cercanos
+    for x_test in [xi_original, xu_original]:
+        try:
+            f_test = f(x_test)
+            if abs(f_test) < tolerance:
+                # Si es una raíz exacta, buscar un intervalo que la contenga
+                left = x_test - step
+                right = x_test + step
+                try:
+                    f_left = f(left)
+                    f_right = f(right)
+                    if f_left * f_right < 0:
+                        return {
+                            'found': True,
+                            'xi': left,
+                            'xu': right,
+                            'message': f'Intervalo válido alrededor de la raíz {x_test:.6f}: [{left:.6f}, {right:.6f}]',
+                            'strategy': 'around_root'
+                        }
+                except:
+                    continue
+        except:
+            continue
+    
+    # Estrategia 1: Expandir el intervalo original evitando las raíces exactas
+    xi, xu = xi_original, xu_original
+    expansion_attempts = 50
+    
+    for attempt in range(expansion_attempts):
+        try:
+            f_xi = f(xi)
+            f_xu = f(xu)
+            
+            if not (math.isfinite(f_xi) and math.isfinite(f_xu)):
+                xi -= step
+                xu += step
+                continue
+            
+            # Evitar intervalos donde ambos extremos son raíces
+            if abs(f_xi) < tolerance and abs(f_xu) < tolerance:
+                xi -= step
+                xu += step
+                continue
+                
+            if f_xi * f_xu < 0:
+                found_intervals.append({'xi': xi, 'xu': xu, 'strategy': 'expansion'})
+                break
+                
+            xi -= step
+            xu += step
+            
+        except Exception:
+            xi -= step
+            xu += step
+            continue
+    
+    # Estrategia 2: Búsqueda sistemática desplazada para evitar simetrías
+    if not found_intervals:
+        search_offsets = [0.1, -0.1, 0.3, -0.3, 0.7, -0.7]
+        
+        for offset in search_offsets:
+            xi_offset = xi_original + offset
+            xu_offset = xu_original + offset
+            
+            try:
+                f_xi_offset = f(xi_offset)
+                f_xu_offset = f(xu_offset)
+                
+                if math.isfinite(f_xi_offset) and math.isfinite(f_xu_offset):
+                    if f_xi_offset * f_xu_offset < 0:
+                        found_intervals.append({'xi': xi_offset, 'xu': xu_offset, 'strategy': 'offset'})
+                        break
+            except:
+                continue
+    
+    # Estrategia 3: Dividir el intervalo original en subintervalos y buscar cambios de signo
+    if not found_intervals:
+        num_subdivisions = 50
+        interval_width = xu_original - xi_original
+        subdivision_width = interval_width / num_subdivisions
+        
+        for i in range(num_subdivisions):
+            try:
+                sub_xi = xi_original + i * subdivision_width
+                sub_xu = xi_original + (i + 1) * subdivision_width
+                
+                f_sub_xi = f(sub_xi)
+                f_sub_xu = f(sub_xu)
+                
+                if not (math.isfinite(f_sub_xi) and math.isfinite(f_sub_xu)):
+                    continue
+                
+                # Saltar si ambos son raíces exactas
+                if abs(f_sub_xi) < tolerance and abs(f_sub_xu) < tolerance:
+                    continue
+                    
+                if f_sub_xi * f_sub_xu < 0:
+                    found_intervals.append({'xi': sub_xi, 'xu': sub_xu, 'strategy': 'subdivision'})
+                    
+            except Exception:
+                continue
+    
+    # Estrategia 4: Búsqueda sistemática en un rango más amplio
+    if not found_intervals:
+        search_start = xi_original - max_search_range
+        search_end = xu_original + max_search_range
+        search_step = step * 2  # Paso más grande para búsqueda amplia
+        search_points = int((search_end - search_start) / search_step)
+        
+        prev_x = search_start
+        try:
+            prev_f = f(prev_x)
+        except:
+            prev_f = None
+        
+        for i in range(1, min(search_points, 500)):  # Limitar para evitar sobrecarga
+            try:
+                current_x = search_start + i * search_step
+                current_f = f(current_x)
+                
+                if prev_f is not None and math.isfinite(prev_f) and math.isfinite(current_f):
+                    # Evitar casos donde ambos son raíces exactas
+                    if not (abs(prev_f) < tolerance and abs(current_f) < tolerance):
+                        if prev_f * current_f < 0:
+                            found_intervals.append({'xi': prev_x, 'xu': current_x, 'strategy': 'wide_search'})
+                
+                prev_x = current_x
+                prev_f = current_f
+                
+            except Exception:
+                prev_f = None
+                continue
+    
+    # Analizar los resultados
+    if found_intervals:
+        first_interval = found_intervals[0]
+        
+        # Preparar mensaje sobre múltiples raíces
+        multiple_roots_message = ""
+        if len(found_intervals) > 1:
+            multiple_roots_message = f"Nota: Se detectaron {len(found_intervals)} intervalos con posibles raíces. Esta es la primera."
+        
+        # Verificar si hay más intervalos válidos después del primero
+        additional_check_message = check_for_additional_roots(f, first_interval['xu'], xu_original + max_search_range, tolerance)
+        
+        if additional_check_message:
+            if multiple_roots_message:
+                multiple_roots_message += f" {additional_check_message}"
+            else:
+                multiple_roots_message = additional_check_message
+        
+        strategy_messages = {
+            'expansion': f'Intervalo válido encontrado expandiendo: [{first_interval["xi"]:.6f}, {first_interval["xu"]:.6f}]',
+            'offset': f'Intervalo válido encontrado con desplazamiento: [{first_interval["xi"]:.6f}, {first_interval["xu"]:.6f}]',
+            'subdivision': f'Primera raíz encontrada en subintervalo: [{first_interval["xi"]:.6f}, {first_interval["xu"]:.6f}]',
+            'wide_search': f'Primera raíz encontrada mediante búsqueda amplia: [{first_interval["xi"]:.6f}, {first_interval["xu"]:.6f}]'
+        }
+        
+        return {
+            'found': True,
+            'xi': first_interval['xi'],
+            'xu': first_interval['xu'],
+            'message': strategy_messages.get(first_interval['strategy'], 'Intervalo válido encontrado'),
+            'strategy': first_interval['strategy'],
+            'multiple_roots_info': multiple_roots_message if multiple_roots_message else None
+        }
+    
+    return {
+        'found': False,
+        'xi': None,
+        'xu': None,
+        'message': f'No se encontró ningún intervalo válido después de búsqueda exhaustiva desde {original_interval}',
+        'strategy': 'none'
+    }
+
+def check_for_additional_roots(f, start_x, end_x, tolerance, step=0.5):
+    """
+    Verifica si hay raíces adicionales después del primer intervalo encontrado.
+    Retorna un mensaje si encuentra evidencia de más raíces.
+    """
+    try:
+        search_points = int((end_x - start_x) / step)
+        if search_points > 200:  # Limitar búsqueda para evitar sobrecarga
+            search_points = 200
+            step = (end_x - start_x) / search_points
+        
+        sign_changes = 0
+        prev_x = start_x
+        
+        try:
+            prev_f = f(prev_x)
+        except:
+            prev_f = None
+        
+        for i in range(1, search_points):
+            try:
+                current_x = start_x + i * step
+                current_f = f(current_x)
+                
+                if prev_f is not None and math.isfinite(prev_f) and math.isfinite(current_f):
+                    if prev_f * current_f < 0:
+                        sign_changes += 1
+                        if sign_changes >= 1:  # Con encontrar una más es suficiente
+                            return "Además, se detectó al menos una raíz adicional en el rango explorado."
+                
+                prev_f = current_f
+                
+            except:
+                prev_f = None
+                continue
+        
+        return None
+        
+    except Exception:
+        return None
+
 def find_valid_interval(f, xi, xu, step=0.5, max_attempts=20):
+    """Función original mantenida para compatibilidad"""
     original_xi, original_xu = xi, xu
     
     try:
