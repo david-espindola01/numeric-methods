@@ -284,7 +284,7 @@ const MathCalculator = ({ onInsert, placeholder = "Insertar función..." }) => {
               </div>
             </div>
 
-            <div className="flex-1">
+            <div className="flex-8">
               <div className="button-grid grid-4-col" style={{ marginBottom: '8px' }}>
                 {parenthesisButtons.map((btn, index) => (
                   <button

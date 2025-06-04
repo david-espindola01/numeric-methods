@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, AreaChart } from 'recharts';
 import '../components/MathCalculator'
-import '../styles/base-styles.css';
+//import '../styles/base-styles.css';
 
 const TrapezoidMethod = () => {
   const [functionStr, setFunctionStr] = useState('x**2');

@@ -25,15 +25,20 @@
 .math-calculator-popup {
   position: absolute;
   top: 100%;
-  left: 0;
-  width: 100%;
-  max-width: 600px;
-  background: white;
-  border-radius: 8px;
-  padding: 15px;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+  right: 0;         /* Cambia left: 0 por right: 0 para que se abra hacia la izquierda */
   z-index: 1000;
-  margin-top: 10px;
+  background: #fff;
+  border: 1.5px solid #667eea;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(44,62,80,0.18);
+  padding: 18px 16px 12px 16px;
+  min-width: 320px;
+  max-width: 420px;
+  min-height: 220px;
+  margin-top: 8px;
+  animation: fadeIn 0.18s;
+  /* Si quieres que nunca se salga de la pantalla, puedes agregar: */
+  /* left: auto; */
 }
 
 .math-calculator-header {

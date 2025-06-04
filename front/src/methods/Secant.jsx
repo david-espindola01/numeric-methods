@@ -11,7 +11,7 @@ import {
   Tooltip
 } from 'chart.js';
 // Importar los estilos base
-import '../styles/base-styles.css';
+//import '../styles/base-styles.css';
 import MathCalculator from '../components/MathCalculator.jsx';
 
 ChartJS.register(
@@ -66,141 +66,144 @@ const SecantMethod = () => {
       }
 
     } catch (err) {
-      alert('Error al procesar la solicitud');
+      alert('Error al procesar la solicitud',err.message);
       setResult(null);
       setChartData(null);
     }
   };
 
   return (
-    <div className="section-container max-w-4xl mx-auto">
+    <div>
       <h2 className="section-title">Método de la Secante</h2>
-      <form onSubmit={handleSubmit} className="input-section mb-6">
-        <div className="input-group">
-          <label className="input-label">Función:</label>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <input
-              type="text"
-              value={formData.function}
-              id='function-input'
-              readOnly
-              className="input-field bg-gray-100 cursor-not-allowed"
-              placeholder="Función seleccionada"
-              tabIndex={-1}
-              style={{ flex: 1 }}
-            />
-            <MathCalculator
-              onInsert={val => setFormData({ ...formData, function: val })}
-              placeholder="Insertar Función"
-              disabled={true}
-            />
-          </div>
-        </div>
-        <div className="inline-inputs-group">
+      <div className="section-container">
+        <form onSubmit={handleSubmit} className="input-section">
           <div className="input-group">
-            <label className="input-label">x₀:</label>
-            <input
-              type="number"
-              name="x0"
-              step="any"
-              value={formData.x0}
-              onChange={handleChange}
-              required
-              className="input-field"
-            />
+            <label className="input-label">Función:</label>
+            <div className="function-input-overlay-container">
+              <input
+                type="text"
+                value={formData.function}
+                id="function-input"
+                readOnly
+                className="input-field function-input-full"
+                placeholder="Función seleccionada"
+                tabIndex={-1}
+              />
+              <div className="function-calculator-overlay">
+                <MathCalculator
+                  onInsert={val => setFormData({ ...formData, function: val })}
+                  placeholder=""
+                  value={formData.function}
+                />
+              </div>
+            </div>
           </div>
-          <div className="input-group">
-            <label className="input-label">x₁:</label>
-            <input
-              type="number"
-              name="x1"
-              step="any"
-              value={formData.x1}
-              onChange={handleChange}
-              required
-              className="input-field"
-            />
+          <div className="inline-inputs-group">
+            <div className="input-group">
+              <label className="input-label">x₀:</label>
+              <input
+                type="number"
+                name="x0"
+                step="any"
+                value={formData.x0}
+                onChange={handleChange}
+                required
+                className="input-field"
+              />
+            </div>
+            <div className="input-group">
+              <label className="input-label">x₁:</label>
+              <input
+                type="number"
+                name="x1"
+                step="any"
+                value={formData.x1}
+                onChange={handleChange}
+                required
+                className="input-field"
+              />
+            </div>
+            <div className="input-group">
+              <label className="input-label">Tolerancia:</label>
+              <input
+                type="number"
+                name="tolerance"
+                step="any"
+                value={formData.tolerance}
+                onChange={handleChange}
+                required
+                className="input-field"
+              />
+            </div>
+            <div className="input-group">
+              <label className="input-label">Iteraciones máximas:</label>
+              <input
+                type="number"
+                name="max_iterations"
+                value={formData.max_iterations}
+                onChange={handleChange}
+                required
+                className="input-field"
+              />
+            </div>
           </div>
-          <div className="input-group">
-            <label className="input-label">Tolerancia:</label>
-            <input
-              type="number"
-              name="tolerance"
-              step="any"
-              value={formData.tolerance}
-              onChange={handleChange}
-              required
-              className="input-field"
-            />
-          </div>
-          <div className="input-group">
-            <label className="input-label">Iteraciones máximas:</label>
-            <input
-              type="number"
-              name="max_iterations"
-              value={formData.max_iterations}
-              onChange={handleChange}
-              required
-              className="input-field"
-            />
-          </div>
-        </div>
-        <button type="submit" className="primary-button mt-4">Calcular</button>
-      </form>
+          <button type="submit" className="primary-button">Calcular</button>
+        </form>
 
-      {result && (
-        <div className="results-section mt-6">
-          <h3 className="section-title text-xl mb-2">Resultado:</h3>
-          {result.root !== undefined ? (
-            <p className="result-item">Raíz aproximada: <strong>{result.root}</strong></p>
-          ) : (
-            <p className="error-message">{result.error}</p>
-          )}
+        {result && (
+          <div className="results-section">
+            <h3 className="section-title">Resultado</h3>
+            {result.root !== undefined ? (
+              <p className="result-item">Raíz aproximada: <strong>{result.root}</strong></p>
+            ) : (
+              <p className="error-message">{result.error}</p>
+            )}
 
-          {result.iterations_detail && (
-            <>
-              <h4 className="section-title text-lg mb-2 table-section">Tabla de Iteraciones:</h4>
-              <div className="overflow-x-auto">
-                <table className="data-table min-w-full border text-sm">
-                  <thead>
-                    <tr>
-                      <th>Iteración</th>
-                      <th>x₀</th>
-                      <th>x₁</th>
-                      <th>x₂</th>
-                      <th>f(x₀)</th>
-                      <th>f(x₁)</th>
-                      <th>Error</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {result.iterations_detail.map((it, i) => (
-                      <tr key={i}>
-                        <td>{it.iteration}</td>
-                        <td>{Number(it.x0).toFixed(4)}</td>
-                        <td>{Number(it.x1).toFixed(4)}</td>
-                        <td>{Number(it.x2).toFixed(4)}</td>
-                        <td>{Number(it.fx0).toFixed(4)}</td>
-                        <td>{Number(it.fx1).toFixed(4)}</td>
-                        <td>{Number(it.error).toFixed(4)}</td>
+            {result.iterations_detail && (
+              <>
+                <h4 className="section-title table-section">Tabla de Iteraciones</h4>
+                <div style={{ overflowX: 'auto' }}>
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        <th>Iteración</th>
+                        <th>x₀</th>
+                        <th>x₁</th>
+                        <th>x₂</th>
+                        <th>f(x₀)</th>
+                        <th>f(x₁)</th>
+                        <th>Error</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </>
-          )}
+                    </thead>
+                    <tbody>
+                      {result.iterations_detail.map((it, i) => (
+                        <tr key={i}>
+                          <td>{it.iteration}</td>
+                          <td>{Number(it.x0).toFixed(4)}</td>
+                          <td>{Number(it.x1).toFixed(4)}</td>
+                          <td>{Number(it.x2).toFixed(4)}</td>
+                          <td>{Number(it.fx0).toFixed(4)}</td>
+                          <td>{Number(it.fx1).toFixed(4)}</td>
+                          <td>{Number(it.error).toFixed(4)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
 
-          {chartData && (
-            <>
-              <h4 className="section-title text-xl mb-4 chart-section">Gráfica de Aproximaciones:</h4>
-              <div className="chart-container bg-white p-4 border rounded">
-                <Line data={chartData} />
-              </div>
-            </>
-          )}
-        </div>
-      )}
+            {chartData && (
+              <>
+                <h4 className="section-title chart-section">Gráfica de Aproximaciones</h4>
+                <div className="chart-container">
+                  <Line data={chartData} />
+                </div>
+              </>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

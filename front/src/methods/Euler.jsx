@@ -12,8 +12,9 @@ import {
   Filler
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
+import MathCalculator from '../components/MathCalculator';
 // Importar los estilos base
-import '../styles/base-styles.css';
+//import '../styles/base-styles.css';
 
 ChartJS.register(
   CategoryScale,
@@ -114,131 +115,145 @@ const EulerMethod = () => {
     };
   };
 
+  const handleFunctionInsert = (mathExpression) => {
+    setFunctionStr(mathExpression);
+  };
+
   return (
-    <div className="section-container max-w-6xl mx-auto">
-      <h2 className="section-title">Método de Euler</h2>
+    <div>
+      <h2 className="section-title">🔢 Método de Euler</h2>
+      <div className="section-container max-w-6xl mx-auto">
+        <div className="input-section max-w-md mx-auto mb-6">
+          <div className="space-y-4">
+            <div className="input-group">
+              <div className="function-input-overlay-container">
+                <label className="input-label">Función dy/dx:</label>
+                <input
+                  type="text"
+                  value={functionStr}
+                  className="input-field function-input-full"
+                  placeholder="Ej: x + y, x*y, sin(x) + y"
+                  readOnly
+                />
+                <div className="function-calculator-overlay">
+                  <MathCalculator
+                    onInsert={handleFunctionInsert}
+                    placeholder=""
+                    value={functionStr}
+                  />
+                </div>
+              </div>
+            </div>
 
-      <div className="input-section max-w-md mx-auto mb-6">
-        <div className="space-y-4">
-          <div className="input-group">
-            <label className="input-label">Función dy/dx:</label>
-            <input
-              type="text"
-              value={functionStr}
-              onChange={(e) => setFunctionStr(e.target.value)}
-              className="input-field"
-              placeholder="Ej: x + y, x*y, sin(x) + y"
-            />
+            <div className="inline-inputs-group">
+              <div className="input-group">
+                <label className="input-label">x₀ (inicial):</label>
+                <input
+                  type="number"
+                  step="any"
+                  value={x0}
+                  onChange={(e) => setX0(e.target.value)}
+                  className="input-field"
+                />
+              </div>
+              <div className="input-group">
+                <label className="input-label">y₀ (inicial):</label>
+                <input
+                  type="number"
+                  step="any"
+                  value={y0}
+                  onChange={(e) => setY0(e.target.value)}
+                  className="input-field"
+                />
+              </div>
+            </div>
+
+            <div className="inline-inputs-group">
+              <div className="input-group">
+                <label className="input-label">Paso (h):</label>
+                <input
+                  type="number"
+                  step="any"
+                  value={h}
+                  onChange={(e) => setH(e.target.value)}
+                  className="input-field"
+                />
+              </div>
+              <div className="input-group">
+                <label className="input-label">x final:</label>
+                <input
+                  type="number"
+                  step="any"
+                  value={xFinal}
+                  onChange={(e) => setXFinal(e.target.value)}
+                  className="input-field"
+                />
+              </div>
+            </div>
+
+            <button
+              onClick={handleSolve}
+              className="primary-button"
+            >
+              Resolver
+            </button>
           </div>
-
-          <div className="inline-inputs-group">
-            <div className="input-group">
-              <label className="input-label">x₀ (inicial):</label>
-              <input
-                type="number"
-                step="any"
-                value={x0}
-                onChange={(e) => setX0(e.target.value)}
-                className="input-field"
-              />
-            </div>
-            <div className="input-group">
-              <label className="input-label">y₀ (inicial):</label>
-              <input
-                type="number"
-                step="any"
-                value={y0}
-                onChange={(e) => setY0(e.target.value)}
-                className="input-field"
-              />
-            </div>
-          </div>
-
-          <div className="inline-inputs-group">
-            <div className="input-group">
-              <label className="input-label">Paso (h):</label>
-              <input
-                type="number"
-                step="any"
-                value={h}
-                onChange={(e) => setH(e.target.value)}
-                className="input-field"
-              />
-            </div>
-            <div className="input-group">
-              <label className="input-label">x final:</label>
-              <input
-                type="number"
-                step="any"
-                value={xFinal}
-                onChange={(e) => setXFinal(e.target.value)}
-                className="input-field"
-              />
-            </div>
-          </div>
-
-          <button
-            onClick={handleSolve}
-            className="primary-button"
-          >
-            Resolver
-          </button>
         </div>
-      </div>
 
-      {error && <p className="error-message">{error}</p>}
+        {error && <p className="error-message">{error}</p>}
 
-      {result && (
-        <div className="results-section mt-6">
-          {/* Información del resultado */}
-          <h3 className="section-title text-xl mb-2">Resultado:</h3>
-          <div className="bg-gray-50 p-4 rounded mb-6">
-            <ul className="results-list">
-              <li className="result-item"><strong>Método:</strong> {result.method}</li>
-              <li className="result-item"><strong>Función:</strong> dy/dx = {result.function}</li>
-              <li className="result-item"><strong>Iteraciones:</strong> {result.iterations}</li>
-              <li className="result-item"><strong>Valor final:</strong> y({result.final_value.x.toFixed(6)}) = {result.final_value.y.toFixed(6)}</li>
-            </ul>
-          </div>
+        {result && (
+          <div className="results-section mt-6">
+            {/* Información del resultado */}
+            <h3 className="section-title text-xl mb-2">Resultado:</h3>
+            <div className="bg-gray-50 p-4 rounded mb-6">
+              <ul className="results-list">
+                <li className="result-item"><strong>Método:</strong> {result.method}</li>
+                <li className="result-item"><strong>Función:</strong> dy/dx = {result.function}</li>
+                <li className="result-item"><strong>Iteraciones:</strong> {result.iterations}</li>
+                <li className="result-item"><strong>Valor final:</strong> y({result.final_value.x.toFixed(6)}) = {result.final_value.y.toFixed(6)}</li>
+              </ul>
+            </div>
 
-          {/* Tabla de iteraciones */}
-          <h4 className="section-title text-lg mb-2 table-section">Tabla de iteraciones</h4>
-          <div className="overflow-x-auto mb-8">
-            <table className="data-table min-w-full border text-sm">
-              <thead>
-                <tr>
-                  <th>Paso</th>
-                  <th>x</th>
-                  <th>y</th>
-                  <th>f(x,y) = dy/dx</th>
-                  <th>y siguiente</th>
-                </tr>
-              </thead>
-              <tbody>
-                {result.iterations_detail.map((row, i) => (
-                  <tr key={i}>
-                    <td>{row.step}</td>
-                    <td>{row.x}</td>
-                    <td>{row.y}</td>
-                    <td>
-                      {row.slope !== null ? row.slope : '—'}
-                    </td>
-                    <td>
-                      {row.y_next !== null ? row.y_next : '—'}
-                    </td>
+            {/* Tabla de iteraciones */}
+            <h4 className="section-title text-lg mb-2 table-section">Tabla de iteraciones</h4>
+            <div className="overflow-x-auto mb-8">
+              <table className="data-table min-w-full border text-sm">
+                <thead>
+                  <tr>
+                    <th>Paso</th>
+                    <th>x</th>
+                    <th>y</th>
+                    <th>f(x,y) = dy/dx</th>
+                    <th>y siguiente</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {result.iterations_detail.map((row, i) => (
+                    <tr key={i}>
+                      <td>{row.step}</td>
+                      <td>{row.x}</td>
+                      <td>{row.y}</td>
+                      <td>
+                        {row.slope !== null ? row.slope : '—'}
+                      </td>
+                      <td>
+                        {row.y_next !== null ? row.y_next : '—'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
-          {/* Gráfico */}
-          <h3 className="section-title text-xl mb-4 chart-section">Gráfico de la solución:</h3>
-          <div className="chart-container bg-white p-4 border rounded">
-            <Line options={chartOptions} data={getChartData()} />
+            {/* Gráfico */}
+            <h3 className="section-title text-xl mb-4 chart-section">Gráfico de la solución:</h3>
+            <div className="chart-container bg-white p-4 border rounded">
+              <Line options={chartOptions} data={getChartData()} />
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
