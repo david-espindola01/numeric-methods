@@ -40,7 +40,7 @@ const EulerMethod = () => {
     setError(null);
     setResult(null);
     try {
-      const response = await axios.post('http://localhost:5008/solve', {
+      const response = await axios.post('http://localhost:5007/solve', {
         function: functionStr,
         x0: parseFloat(x0),
         y0: parseFloat(y0),

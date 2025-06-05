@@ -37,7 +37,7 @@ const GaussSeidelMethod = () => {
     setError(null);
     setResult(null);
     try {
-      const response = await axios.post('http://localhost:5007/solve', {
+      const response = await axios.post('http://localhost:5006/solve', {
         A,
         b,
         tolerance: 1e-6,

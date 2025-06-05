@@ -9,6 +9,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
+import { evaluate } from 'mathjs'; // <-- Agrega esto
 import MathCalculator from '../components/MathCalculator';
 import '../styles/base-styles.css';
 ChartJS.register(LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend);
@@ -81,6 +82,61 @@ function FixedPoint() {
     }
   };
 
+  // Generar datos para graficar la función g(x)
+  const getFunctionPlotData = () => {
+    if (!functionStr) return null;
+    let center = x0 ? parseFloat(x0) : 0;
+    let minX = center - 5;
+    let maxX = center + 5;
+
+    // Si hay iteraciones, ajusta el rango pero con límites máximos
+    if (iterations.length > 0) {
+      const xs = iterations.map(row => parseFloat(row.x));
+      const minIt = Math.min(...xs, minX);
+      const maxIt = Math.max(...xs, maxX);
+      // Limita el rango a un máximo de 20 unidades
+      minX = Math.max(minIt - 2, center - 10);
+      maxX = Math.min(maxIt + 2, center + 10);
+    }
+
+    // Evita rango inválido
+    if (minX === maxX) {
+      minX = center - 5;
+      maxX = center + 5;
+    }
+    const step = (maxX - minX) / 100;
+    if (step <= 0 || !isFinite(step)) return null;
+
+    const points = [];
+    for (let x = minX; x <= maxX; x += step) {
+      try {
+        const y = evaluate(functionStr, { x });
+        if (typeof y === 'number' && isFinite(y)) {
+          points.push({ x, y });
+        }
+      } catch {
+        // Si hay error en la función, ignora el punto
+      }
+    }
+    return {
+      labels: points.map(p => p.x),
+      datasets: [
+        {
+          label: 'g(x)',
+          data: points.map(p => p.y),
+          borderColor: '#e57373',
+          backgroundColor: 'rgba(229, 115, 115, 0.1)',
+          borderWidth: 2,
+          fill: false,
+          pointRadius: 0,
+          tension: 0.25,
+        }
+      ]
+    };
+  };
+
+  const functionPlotData = getFunctionPlotData();
+
   const chartData = {
     labels: iterations.map((_, index) => index + 1),
     datasets: [
@@ -148,6 +204,13 @@ function FixedPoint() {
       }
     }
   };
+
+  // Mostrar la gráfica solo si todos los campos están llenos
+  const allFieldsFilled =
+    functionStr.trim() !== '' &&
+    x0 !== '' &&
+    tolerance !== '' &&
+    maxIterations !== '';
 
   return (
     <div>
@@ -218,7 +281,7 @@ function FixedPoint() {
           <div className="results-section">
             <h3 className="section-title">📊 Resultado</h3>
             {result.error ? (
-              <div className="error-message">{result.error}</div>
+              <div className="error-message">{result.root}</div>
             ) : (
               <ul className="results-list">
                 <li className="result-item">
@@ -268,8 +331,27 @@ function FixedPoint() {
             </div>
           </div>
         )}
+
+        {/* Gráfica de la función g(x) */}
+        {allFieldsFilled && functionPlotData && (
+          <div className="chart-section" style={{ minHeight: 320 }}>
+            <h3 className="section-title">📉 Gráfica de la función g(x)</h3>
+            <div className="chart-container">
+              <Line data={functionPlotData} options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: true } },
+                scales: {
+                  x: { title: { display: true, text: 'x' } },
+                  y: { title: { display: true, text: 'g(x)' } }
+                }
+              }} />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
 }
+
 export default FixedPoint;

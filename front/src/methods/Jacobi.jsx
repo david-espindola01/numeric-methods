@@ -37,7 +37,7 @@ const JacobiMethod = () => {
     setError(null);
     setResult(null);
     try {
-      const response = await axios.post('http://localhost:5006/solve', {
+      const response = await axios.post('http://localhost:5005/solve', {
         A,
         b,
         tolerance: 1e-6,

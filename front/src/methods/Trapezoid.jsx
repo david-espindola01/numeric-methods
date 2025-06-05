@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, AreaChart } from 'recharts';
-import '../components/MathCalculator'
-//import '../styles/base-styles.css';
+import { ResponsiveContainer, AreaChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import MathCalculator from '../components/MathCalculator';
+import '../styles/base-styles.css';
 
 const TrapezoidMethod = () => {
   const [functionStr, setFunctionStr] = useState('x**2');
@@ -27,13 +27,14 @@ const TrapezoidMethod = () => {
         .replace(/\^/g, '**')
         .replace(/pi/g, 'Math.PI')
         .replace(/e(?![a-zA-Z])/g, 'Math.E');
-
       expr = expr.replace(/(?<!Math\.)x/g, `(${x})`);
       return Function(`"use strict"; return (${expr})`)();
     } catch (error) {
       throw new Error(`Error evaluando función en x=${x}: ${error.message}`);
     }
   };
+
+  const handleFunctionInsert = (val) => setFunctionStr(val);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -47,7 +48,7 @@ const TrapezoidMethod = () => {
         throw new Error('Todos los campos son obligatorios');
       }
 
-      const response = await fetch('http://localhost:5010/solve', {
+      const response = await fetch('http://localhost:5009/solve', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -60,17 +61,21 @@ const TrapezoidMethod = () => {
         })
       });
 
-      const data = await response.json();
-
       if (!response.ok) {
-        throw new Error(data.error || 'Error al calcular la integral');
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
+      
+      const data = await response.json();
 
       setResult(data);
       generateGraph(data);
 
     } catch (err) {
-      setError(err.message || 'Error desconocido');
+      if (err.name === 'TypeError' && err.message === 'Failed to fetch') {
+        setError('No se pudo conectar con el servidor. Verifica que esté corriendo.');
+      } else {
+        setError(`Error: ${err.message}`);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -78,9 +83,21 @@ const TrapezoidMethod = () => {
 
   const generateGraph = (data) => {
     try {
-      const { interval, tabla } = data;
+      console.log('Datos recibidos:', data); // Debug data
+
+      // Verify data structure
+      if (!data) {
+        throw new Error('No se recibieron datos del servidor');
+      }
+
+      // Get interval values, with fallback
+      const interval = data.interval || [
+        parseFloat(a), // Use form values as fallback
+        parseFloat(b)
+      ];
       const [aVal, bVal] = interval;
 
+      // Generate curve points
       const numPoints = 200;
       const step = (bVal - aVal) / numPoints;
       const curveData = [];
@@ -90,19 +107,35 @@ const TrapezoidMethod = () => {
         try {
           const y = evaluateFunction(functionStr, x);
           if (isFinite(y)) {
-            curveData.push({ x: parseFloat(x.toFixed(6)), y: parseFloat(y.toFixed(6)), function: y });
+            curveData.push({ 
+              x: parseFloat(x.toFixed(6)), 
+              y: parseFloat(y.toFixed(6)), 
+              function: y 
+            });
           }
         } catch (error) {
-          console.warn(`Error evaluando en x=${x}:`, error.message);
+          console.warn(`Error evaluando punto x=${x}:`, error);
         }
       }
 
-      const trapezoidPoints = tabla.map(row => ({
-        x: row.x_i,
-        y: row["f(x_i)"],
-        trapezoid: row["f(x_i)"]
-      }));
+      // Handle trapezoid points
+      let trapezoidPoints = [];
+      if (data.tabla && Array.isArray(data.tabla)) {
+        trapezoidPoints = data.tabla.map(row => ({
+          x: row.x_i || row.x || 0,
+          y: row["f(x_i)"] || row.fx || row.y || 0,
+          trapezoid: row["f(x_i)"] || row.fx || row.y || 0
+        }));
+      } else if (data.points && Array.isArray(data.points)) {
+        // Alternative data structure
+        trapezoidPoints = data.points.map(row => ({
+          x: row.x || 0,
+          y: row.y || 0,
+          trapezoid: row.y || 0
+        }));
+      }
 
+      // Combine data
       const combinedData = curveData.map(point => {
         const trapPoint = trapezoidPoints.find(tp => Math.abs(tp.x - point.x) < 0.001);
         return {
@@ -116,122 +149,131 @@ const TrapezoidMethod = () => {
         trapezoidPoints
       });
     } catch (error) {
+      console.error('Error en generateGraph:', error, 'Data:', data);
       setError(`Error generando gráfica: ${error.message}`);
     }
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-6 bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
-      <div className="bg-white rounded-xl shadow-xl p-8">
-        <h2 className="text-4xl font-bold mb-8 text-center text-blue-800 flex items-center justify-center gap-3">
-          Regla del Trapecio
-        </h2>
+    <div className="section-container">
+      <div className="card">
+        <h2 className="section-title text-center">Regla del Trapecio</h2>
 
-        <div className="space-y-6 bg-gray-50 p-6 rounded-lg mb-8">
-          <div>
-            <label className="block font-medium text-gray-700 mb-3 text-lg">Función f(x):</label>
-            <input
-              type="text"
-              value={functionStr}
-              onChange={(e) => setFunctionStr(e.target.value)}
-              className="w-full border border-gray-300 p-4 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg font-mono"
-            />
-            
+        <form onSubmit={handleSubmit} className="input-section">
+          <div className="input-group">
+            <label className="input-label">Función f(x):</label>
+            <div className="function-input-overlay-container">
+              <input
+                type="text"
+                value={functionStr}
+                onChange={(e) => setFunctionStr(e.target.value)}
+                className="input-field function-input-full"
+                placeholder="Ej: x**2 + 3*x - 5"
+                required
+                readOnly
+              />
+              <div className="function-calculator-overlay">
+                <MathCalculator
+                  onInsert={handleFunctionInsert}
+                  placeholder=""
+                  value={functionStr}
+                />
+              </div>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <label className="block font-medium text-gray-700 mb-2">Límite inferior (a):</label>
+          <div className="inline-inputs-group">
+            <div className="input-group">
+              <label className="input-label">Límite inferior (a):</label>
               <input
                 type="number"
                 step="any"
                 value={a}
                 onChange={(e) => setA(e.target.value)}
-                className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="input-field"
+                required
               />
             </div>
-            <div>
-              <label className="block font-medium text-gray-700 mb-2">Límite superior (b):</label>
+            <div className="input-group">
+              <label className="input-label">Límite superior (b):</label>
               <input
                 type="number"
                 step="any"
                 value={b}
                 onChange={(e) => setB(e.target.value)}
-                className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="input-field"
+                required
               />
             </div>
-            <div>
-              <label className="block font-medium text-gray-700 mb-2">Subintervalos (n):</label>
+            <div className="input-group">
+              <label className="input-label">Subintervalos (n):</label>
               <input
                 type="number"
                 min="1"
                 value={n}
                 onChange={(e) => setN(e.target.value)}
-                className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="input-field"
+                required
               />
             </div>
           </div>
 
           <button
-            onClick={handleSubmit}
+            type="submit"
             disabled={isLoading || !functionStr || !a || !b || !n}
-            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4 rounded-lg hover:from-blue-700 hover:to-indigo-700 disabled:from-blue-400 disabled:to-indigo-400 transition-all duration-300 font-medium text-lg shadow-lg"
+            className="primary-button"
           >
             {isLoading ? '🔄 Calculando...' : '📊 Calcular Integral'}
           </button>
-        </div>
+        </form>
 
         {error && (
-          <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+          <div className="error-message mt-4">
             <strong>❌ Error:</strong> {error}
           </div>
         )}
 
         {result && (
-          <div className="mb-8 bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-lg border border-green-200">
-            <h3 className="text-2xl font-semibold mb-4 text-green-800 flex items-center gap-2">
-              <span>✅</span> Resultado
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              <div className="p-3 bg-white rounded-lg"><strong>Función:</strong> f(x) = {result.function}</div>
-              <div className="p-3 bg-white rounded-lg"><strong>Intervalo:</strong> [{result.interval[0]}, {result.interval[1]}]</div>
-              <div className="p-3 bg-white rounded-lg"><strong>Subintervalos:</strong> {result.subintervals}</div>
-              <div className="p-3 bg-white rounded-lg"><strong>Tamaño de paso (h):</strong> {result.step_size?.toFixed(6)}</div>
-              <div className="md:col-span-2 p-4 bg-green-100 rounded-lg border-2 border-green-300">
-                <strong className="text-lg">Integral aproximada:</strong>
-                <span className="text-2xl font-bold text-green-700 ml-3">
+          <div className="results-section mt-8">
+            <h3 className="section-title">Resultado</h3>
+            <div className="inline-results-group">
+              <div><strong>Función:</strong> f(x) = {result.function}</div>
+              <div><strong>Intervalo:</strong> [{result.interval[0]}, {result.interval[1]}]</div>
+              <div><strong>Subintervalos:</strong> {result.subintervals}</div>
+              <div><strong>Tamaño de paso (h):</strong> {result.step_size?.toFixed(6)}</div>
+              <div><strong>Método:</strong> {result.method}</div>
+              <div>
+                <strong>Integral aproximada:</strong>
+                <span className="text-green-700 font-bold ml-2">
                   {typeof result.integral === 'number' ? result.integral.toFixed(8) : result.integral}
                 </span>
               </div>
-              <div className="p-3 bg-white rounded-lg"><strong>Método:</strong> {result.method}</div>
             </div>
           </div>
         )}
 
         {result?.tabla && (
-          <div className="mt-10">
-            <h3 className="text-xl font-semibold mb-4 text-indigo-800 flex items-center gap-2">
-              <span>📋</span> Tabla de Cálculo
-            </h3>
+          <div className="table-section mt-10">
+            <h3 className="section-title">Tabla de Cálculo</h3>
             <div className="overflow-x-auto">
-              <table className="min-w-full text-sm border border-gray-300 bg-white rounded-lg">
-                <thead className="bg-indigo-100">
+              <table className="data-table">
+                <thead>
                   <tr>
-                    <th className="p-3 border">i</th>
-                    <th className="p-3 border">xᵢ</th>
-                    <th className="p-3 border">f(xᵢ)</th>
-                    <th className="p-3 border">Coeficiente</th>
-                    <th className="p-3 border">Contribución</th>
+                    <th>i</th>
+                    <th>xᵢ</th>
+                    <th>f(xᵢ)</th>
+                    <th>Coeficiente</th>
+                    <th>Contribución</th>
                   </tr>
                 </thead>
                 <tbody>
                   {result.tabla.map((fila) => (
-                    <tr key={fila.i} className="text-center hover:bg-indigo-50">
-                      <td className="p-2 border">{fila.i}</td>
-                      <td className="p-2 border">{fila["x_i"].toFixed(6)}</td>
-                      <td className="p-2 border">{fila["f(x_i)"].toFixed(6)}</td>
-                      <td className="p-2 border">{fila.coeficiente}</td>
-                      <td className="p-2 border">{fila.contribucion.toFixed(6)}</td>
+                    <tr key={fila.i}>
+                      <td>{fila.i}</td>
+                      <td>{fila["x_i"].toFixed(6)}</td>
+                      <td>{fila["f(x_i)"].toFixed(6)}</td>
+                      <td>{fila.coeficiente}</td>
+                      <td>{fila.contribucion.toFixed(6)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -240,33 +282,16 @@ const TrapezoidMethod = () => {
           </div>
         )}
 
-
         {graphData && (
-          <div className="mt-8">
-            <h3 className="text-2xl font-semibold mb-6 text-blue-800 flex items-center gap-2">
-              <span>📈</span> Visualización de la Función y Aproximación
-            </h3>
-            <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-lg">
-              <ResponsiveContainer width="100%" height={500}>
-                <AreaChart data={graphData.curveData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ff" />
-                  <XAxis
-                    dataKey="x"
-                    type="number"
-                    scale="linear"
-                    domain={['dataMin', 'dataMax']}
-                    label={{ value: 'x', position: 'insideBottom', offset: -5 }}
-                    stroke="#4f46e5"
-                  />
-                  <YAxis
-                    label={{ value: 'f(x)', angle: -90, position: 'insideLeft' }}
-                    stroke="#4f46e5"
-                  />
-                  <Tooltip
-                    formatter={(value, name) => [value.toFixed(6), name]}
-                    labelFormatter={(x) => `x = ${x.toFixed(6)}`}
-                    contentStyle={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0' }}
-                  />
+          <div className="chart-section mt-8">
+            <h3 className="section-title">Visualización de la Función y Aproximación</h3>
+            <div className="chart-container">
+              <ResponsiveContainer width="100%" height={400}>
+                <AreaChart data={graphData.curveData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="x" />
+                  <YAxis />
+                  <Tooltip />
                   <Legend />
                   <Area
                     type="monotone"

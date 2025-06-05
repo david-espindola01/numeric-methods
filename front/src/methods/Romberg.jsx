@@ -11,6 +11,7 @@ import {
   Filler
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
+import MathCalculator from '../components/MathCalculator';
 
 ChartJS.register(
   CategoryScale,
@@ -39,7 +40,7 @@ const RombergMethod = () => {
     setLoading(true);
     
     try {
-      const response = await fetch('http://localhost:5011/solve', {
+      const response = await fetch('http://localhost:5010/solve', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -161,143 +162,153 @@ const RombergMethod = () => {
   };
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <h2 className="text-2xl font-bold mb-4 text-green-700">Método de Romberg</h2>
+    <div className="section-container max-w-6xl mx-auto">
+      <h2 className="section-title text-green-700">Método de Romberg</h2>
       <p className="text-gray-600 mb-6">
         Integración numérica usando el método de Romberg con extrapolación de Richardson
       </p>
 
-      <div className="max-w-md mx-auto mb-6">
-        <div className="space-y-4">
-          <div>
-            <label className="block mb-1 font-medium">Función f(x):</label>
-            <input
-              type="text"
-              value={functionStr}
-              onChange={(e) => setFunctionStr(e.target.value)}
-              className="w-full p-2 border rounded focus:ring-2 focus:ring-green-500 focus:border-green-500"
-              placeholder="Ej: x**2, sin(x), exp(x), x**3 + 2*x"
-            />
+      <div className="card max-w-md mx-auto mb-6">
+        <form
+          onSubmit={e => {
+            e.preventDefault();
+            handleSolve();
+          }}
+          className="input-section space-y-4"
+        >
+          <div className="input-group">
+            <label className="input-label">Función f(x):</label>
+            <div className="function-input-overlay-container">
+              <input
+                type="text"
+                value={functionStr}
+                onChange={e => setFunctionStr(e.target.value)}
+                className="input-field function-input-full"
+                placeholder="Ej: x**2, sin(x), exp(x), x**3 + 2*x"
+                required
+                readOnly
+              />
+              <div className="function-calculator-overlay">
+                <MathCalculator
+                  onInsert={setFunctionStr}
+                  placeholder=""
+                  value={functionStr}
+                />
+              </div>
+            </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block mb-1 font-medium">Límite inferior (a):</label>
+          <div className="inline-inputs-group">
+            <div className="input-group">
+              <label className="input-label">Límite inferior (a):</label>
               <input
                 type="number"
                 step="any"
                 value={a}
-                onChange={(e) => setA(e.target.value)}
-                className="w-full p-2 border rounded focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                onChange={e => setA(e.target.value)}
+                className="input-field"
+                required
               />
             </div>
-            <div>
-              <label className="block mb-1 font-medium">Límite superior (b):</label>
+            <div className="input-group">
+              <label className="input-label">Límite superior (b):</label>
               <input
                 type="number"
                 step="any"
                 value={b}
-                onChange={(e) => setB(e.target.value)}
-                className="w-full p-2 border rounded focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                onChange={e => setB(e.target.value)}
+                className="input-field"
+                required
               />
             </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block mb-1 font-medium">Tolerancia:</label>
+            <div className="input-group">
+              <label className="input-label">Tolerancia:</label>
               <input
                 type="number"
                 step="any"
                 value={tolerance}
-                onChange={(e) => setTolerance(e.target.value)}
-                className="w-full p-2 border rounded focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                onChange={e => setTolerance(e.target.value)}
+                className="input-field"
                 placeholder="1e-6"
+                required
               />
             </div>
-            <div>
-              <label className="block mb-1 font-medium">Máx. iteraciones:</label>
+            <div className="input-group">
+              <label className="input-label">Máx. iteraciones:</label>
               <input
                 type="number"
                 value={maxIterations}
-                onChange={(e) => setMaxIterations(e.target.value)}
-                className="w-full p-2 border rounded focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                onChange={e => setMaxIterations(e.target.value)}
+                className="input-field"
+                required
               />
             </div>
           </div>
 
           <button
-            onClick={handleSolve}
+            type="submit"
             disabled={loading}
-            className="w-full bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="primary-button w-full"
           >
             {loading ? 'Calculando...' : 'Calcular Integral'}
           </button>
-        </div>
+        </form>
       </div>
 
       {error && (
-        <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded">
-          <p className="text-red-600 font-semibold">{error}</p>
+        <div className="error-message mt-4">
+          <p>{error}</p>
         </div>
       )}
 
       {result && (
-        <div className="mt-6">
-          {/* Información del resultado */}
-          <h3 className="text-xl font-semibold mb-2">Resultado:</h3>
-          <div className="bg-gray-50 p-4 rounded mb-6 border">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <p><strong>Método:</strong> {result.method}</p>
-                <p><strong>Función:</strong> f(x) = {result.function}</p>
-                <p><strong>Intervalo:</strong> [{result.interval[0]}, {result.interval[1]}]</p>
-              </div>
-              <div>
-                <p><strong>Iteraciones:</strong> {result.iterations}</p>
-                <p><strong>Tolerancia:</strong> {result.tolerance}</p>
-                <p><strong>Convergencia:</strong> 
-                  <span className={`ml-2 px-2 py-1 rounded text-sm ${
-                    result.converged 
-                      ? 'bg-green-100 text-green-800' 
-                      : 'bg-red-100 text-red-800'
-                  }`}>
-                    {result.converged ? '✓ Convergió' : '✗ No convergió'}
-                  </span>
-                </p>
-              </div>
+        <div className="results-section mt-6">
+          <h3 className="section-title">Resultado:</h3>
+          <div className="inline-results-group">
+            <div><strong>Método:</strong> {result.method}</div>
+            <div><strong>Función:</strong> f(x) = {result.function}</div>
+            <div><strong>Intervalo:</strong> [{result.interval[0]}, {result.interval[1]}]</div>
+            <div><strong>Iteraciones:</strong> {result.iterations}</div>
+            <div><strong>Tolerancia:</strong> {result.tolerance}</div>
+            <div>
+              <strong>Convergencia:</strong>
+              <span className={`ml-2 px-2 py-1 rounded text-sm ${
+                result.converged
+                  ? 'bg-green-100 text-green-800'
+                  : 'bg-red-100 text-red-800'
+              }`}>
+                {result.converged ? '✓ Convergió' : '✗ No convergió'}
+              </span>
             </div>
-            <div className="mt-4 p-3 bg-white rounded border">
-              <p className="text-lg"><strong>Valor de la integral:</strong> 
-                <span className="ml-2 font-mono text-blue-600">{formatNumber(result.integral)}</span>
-              </p>
-              {result.error && (
-                <p className="mt-1"><strong>Error estimado:</strong> 
-                  <span className="ml-2 font-mono text-orange-600">{formatNumber(result.error)}</span>
-                </p>
-              )}
+            <div>
+              <strong>Valor de la integral:</strong>
+              <span className="ml-2 font-mono text-blue-600">{formatNumber(result.integral)}</span>
             </div>
-            {result.warning && (
-              <div className="mt-3 p-3 bg-orange-50 border border-orange-200 rounded">
-                <p className="text-orange-700"><strong>Advertencia:</strong> {result.warning}</p>
+            {result.error && (
+              <div>
+                <strong>Error estimado:</strong>
+                <span className="ml-2 font-mono text-orange-600">{formatNumber(result.error)}</span>
               </div>
             )}
           </div>
+          {result.warning && (
+            <div className="mt-3 p-3 bg-orange-50 border border-orange-200 rounded">
+              <p className="text-orange-700"><strong>Advertencia:</strong> {result.warning}</p>
+            </div>
+          )}
 
-          {/* Gráfico de la función */}
-          <h3 className="text-xl font-semibold mb-4">Gráfico de la función:</h3>
-          <div className="bg-white p-4 border rounded mb-6">
+          <h3 className="section-title mt-6">Gráfico de la función:</h3>
+          <div className="chart-section bg-white p-4 border rounded mb-6">
             <Line options={chartOptions} data={getChartData()} />
             <p className="text-sm text-gray-600 mt-2 text-center">
               Área bajo la curva representa la integral ∫ f(x) dx desde {a} hasta {b}
             </p>
           </div>
 
-          {/* Tabla de Romberg */}
-          <h4 className="text-lg font-semibold mb-2">Tabla de Romberg</h4>
-          <div className="overflow-x-auto mb-8">
-            <table className="min-w-full border text-sm">
-              <thead className="bg-green-100">
+          <h4 className="section-title">Tabla de Romberg</h4>
+          <div className="table-section overflow-x-auto mb-8">
+            <table className="data-table min-w-full border text-sm">
+              <thead>
                 <tr>
                   <th className="border px-3 py-2 font-semibold">Fila (i)</th>
                   {result.romberg_table[0] && result.romberg_table[0].map((_, colIndex) => (
@@ -318,7 +329,6 @@ const RombergMethod = () => {
                         {formatNumber(value)}
                       </td>
                     ))}
-                    {/* Llenar celdas vacías */}
                     {Array.from({ length: result.romberg_table.length - row.length }, (_, i) => (
                       <td key={`empty-${i}`} className="border px-3 py-1 bg-gray-200"></td>
                     ))}
